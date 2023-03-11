@@ -82,10 +82,9 @@ class Item(models.Model):
 
 class Borrow_info(models.Model):
     b_id = models.AutoField(primary_key =True)
-    b_item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    b_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    b_item = models.ForeignKey(Item, on_delete=models.DO_NOTHING)
+    b_user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     b_location = models.TextField()
-    #b_status = models.ForeignKey(Borrow_statuses, on_delete = models.CASCADE)
     b_note = models.TextField()
     b_borrow_time = models.DateTimeField()
     b_return_time = models.DateTimeField()
