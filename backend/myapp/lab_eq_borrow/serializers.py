@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import *
 
-class ItemsSerializer(serializers.ModelSerializer):
+class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
         fields = ('item_id','item_id_type','item_name','item_category',
@@ -20,9 +20,9 @@ class DepartmentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FacultieSerializer(serializers.ModelSerializer):
+class FacultySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Facultie
+        model = Faculty
         fields = '__all__'
 
 
@@ -32,15 +32,15 @@ class IdTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ItemCategorieSerializer(serializers.ModelSerializer):
+class ItemCategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Item_categorie
+        model = Item_category
         fields = '__all__'
 
 
-class ItemStatuseSerializer(serializers.ModelSerializer):
+class ItemStatusSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Item_statuse
+        model = Item_status
         fields = '__all__'
 
 
@@ -61,7 +61,7 @@ class BorrowInfoSerializer(serializers.ModelSerializer):
         model = Borrow_info
         fields = '__all__'
 
-class Borrow_statuseSerializer(serializers.ModelSerializer):
+class Borrow_statusSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Borrow_statuse
+        model = Borrow_status
         fields = ('b_status_id', 'b_status_name')

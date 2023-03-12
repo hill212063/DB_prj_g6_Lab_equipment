@@ -15,29 +15,28 @@ from .authentication import create_access_token, create_refresh_token , decode_a
 from .permissions import *
 from .backends import *
 
+from rest_framework.authentication import get_authorization_header
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.exceptions import APIException , AuthenticationFailed
+
+from .storages import MediaStorage
+import os
+import uuid
 # Create your views here.
-def index(request):
-    objs = Item.objects.all().values()
-    json_data = []
-    for obj in objs:
-        json_data.append(obj)
+# def index(request):
+#     objs = Item.objects.all().values()
+#     json_data = []
+#     for obj in objs:
+#         json_data.append(obj)
 
-    return JsonResponse(json_data, safe=False, json_dumps_params={'ensure_ascii': False})
-
-# Set the refresh token as a cookie in the response
-def set_refresh_token(response, refresh_token):
-    response.set_cookie('refresh_token', refresh_token, httponly=True, max_age=604800)  # 7 days in seconds
-
-# Get the refresh token from the request cookies
-def get_refresh_token(request):
-    return request.COOKIES.get('refresh_token')
-
+#     return JsonResponse(json_data, safe=False, json_dumps_params={'ensure_ascii': False})
 
 @api_view(['GET'])
 def all_faculties(request):
     try:
-        allfaculties = Facultie.objects.all()
-        serializer = FacultieSerializer(allfaculties,many = True)
+        allfaculties = Faculty.objects.all()
+        serializer = FacultySerializer(allfaculties,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -55,7 +54,7 @@ def all_departments(request):
 def all_items(request):
     try:
         allitems = Item.objects.all()
-        serializer = ItemsSerializer(allitems,many = True)
+        serializer = ItemSerializer(allitems,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -69,9 +68,9 @@ from rest_framework.permissions import IsAuthenticated
 def items(request):
     # get only item that borrowed
     try:
-        available_status = Borrow_statuse.objects.filter(b_status_name="available") 
+        available_status = Borrow_status.objects.filter(b_status_name="available") 
         allitems = Item.objects.filter(item_status =  available_status.b_status_id )
-        serializer = ItemsSerializer(allitems,many = True)
+        serializer = ItemSerializer(allitems,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -92,7 +91,7 @@ def item_details(request, item_id):
             'item_status': item.item_status,
             'item_borrow_status': item.item_borrow_status,
             'item_note': item.item_note,
-            'item_img_url': item.item_img_id.url,
+            'item_img_url': item.item_img_url,
             'item_created_at': item.item_created_at,
             'item_updated_at': item.item_updated_at,
         }
@@ -170,7 +169,7 @@ def add_user(request):
 
         # Check if faculty exists
         try:
-            u_faculty = Facultie.objects.get(f_id=u_faculty_id)
+            u_faculty = Faculty.objects.get(f_id=u_faculty_id)
         except ObjectDoesNotExist:
             return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -224,7 +223,7 @@ def edit_user(request,user_id):
         exist_data.u_password = request.data.get('u_password')
         exist_data.u_tel = request.data.get('u_tel')
         try:
-            exist_data.u_faculty = Facultie.objects.get(f_id=request.data.get('u_faculty'))
+            exist_data.u_faculty = Faculty.objects.get(f_id=request.data.get('u_faculty'))
         except ObjectDoesNotExist:
             return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
@@ -240,7 +239,20 @@ def edit_user(request,user_id):
         return Response({'message':'Edited'},status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
+
+@api_view(['DELETE'])
+def delete_user(request,user_id):
+    try:
+        user = User.objects.get(u_id = user_id)
+        user.delete()
+        return Response({'message':'Deleted'},status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
 
 @api_view(['GET'])
 def borrowing_info(request):
@@ -323,6 +335,18 @@ def edit_borrowing_info(request,info_id):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
+@api_view(['DELETE'])
+def delete_borrowing_info(request,info_id):
+    try:
+        b_info = Borrow_info.objects.get(b_id = info_id)
+        b_info.delete()
+        return Response({'message':'Deleted'},status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 @api_view(['GET'])
 def item_info(request):
     try:
@@ -345,6 +369,7 @@ def add_item_info(request):
     item_borrow_status
     item_description
     item_note
+    file as image file
     '''
     try:
         item_id=request.data.get('item_id')
@@ -356,12 +381,12 @@ def add_item_info(request):
         item_name=request.data.get('item_name')
 
         try:
-            item_category=Item_categorie.objects.get(item_cate_id=request.data.get('item_category'))
+            item_category=Item_category.objects.get(item_cate_id=request.data.get('item_category'))
         except ObjectDoesNotExist:
             return Response({'message': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
-            item_faculty=Facultie.objects.get(f_id= request.data.get('item_faculty'))
+            item_faculty=Faculty.objects.get(f_id= request.data.get('item_faculty'))
         except ObjectDoesNotExist:
             return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
         
@@ -370,15 +395,45 @@ def add_item_info(request):
         except ObjectDoesNotExist:
             return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            item_status=Item_statuse.objects.get(item_status_id= request.data.get('item_status'))
+            item_status=Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:
             return Response({'message': 'Item status not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            item_borrow_status=Borrow_statuse.objects.get(b_status_id= request.data.get('item_borrow_status'))
+            item_borrow_status=Borrow_status.objects.get(b_status_id= request.data.get('item_borrow_status'))
         except ObjectDoesNotExist:
             return Response({'message': 'Borrow status not found'}, status=status.HTTP_404_NOT_FOUND)
         item_description=request.data.get('item_description')
         item_note=request.data.get('item_note')
+
+
+        #FOR UPLOAD FILE
+        file_path_within_bucket=""
+        media_storage = MediaStorage()
+        if(request.FILES.get('file', False)):
+            file_obj = request.FILES.get('file', '')
+
+            # do your validation here e.g. file size/type check
+
+            # organize a path for the file in bucket
+            file_directory_within_bucket = 'media/'
+            file_type = '.'+file_obj.name.split('.')[1]
+            # synthesize a full file path; note that we included the filename
+            file_path_within_bucket = os.path.join(
+                file_directory_within_bucket,
+                str(uuid.uuid4())+file_type
+            )
+            if not media_storage.exists(file_path_within_bucket): # avoid overwriting existing file
+                media_storage.save(file_path_within_bucket, file_obj)
+                file_url = media_storage.url(file_path_within_bucket)
+            else:
+                return Response({
+                    'message': 'Error: file {filename} already exists at {file_directory} in bucket {bucket_name}'.format(
+                        filename=file_obj.name,
+                        file_directory=file_directory_within_bucket,
+                        bucket_name=media_storage.bucket_name
+                    ),
+                }, status=400)
+
         inserted_data = Item(
             item_id=item_id,
             item_id_type= item_id_type,
@@ -389,7 +444,8 @@ def add_item_info(request):
             item_status=item_status,
             item_borrow_status=item_borrow_status,
             item_description=item_description,
-            item_note=item_note
+            item_note=item_note,
+            item_img_url=file_path_within_bucket
         )
         inserted_data.save()
         return Response({'message':'Added'},status = status.HTTP_200_OK)
@@ -410,10 +466,11 @@ def edit_item_info(request, item_id):
     item_borrow_status
     item_description
     item_note
+    file as image file
     '''
     try:
         try:
-            exist_data = Item.objects.get(id=item_id)
+            exist_data = Item.objects.get(item_id=item_id)
         except ObjectDoesNotExist:
             return Response({'message': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
@@ -424,11 +481,11 @@ def edit_item_info(request, item_id):
         exist_data.item_name = request.data.get('item_name')
 
         try:
-            exist_data.item_category =Item_categorie.objects.get(item_cate_id= request.data.get('item_category'))
+            exist_data.item_category =Item_category.objects.get(item_cate_id= request.data.get('item_category'))
         except ObjectDoesNotExist:
             return Response({'message': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.item_faculty =Facultie.objects.get(f_id=  request.data.get('item_faculty'))
+            exist_data.item_faculty =Faculty.objects.get(f_id=  request.data.get('item_faculty'))
         except ObjectDoesNotExist:
             return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
@@ -436,29 +493,71 @@ def edit_item_info(request, item_id):
         except ObjectDoesNotExist:
             return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.item_status =Item_statuse.objects.get(item_status_id= request.data.get('item_status'))
+            exist_data.item_status =Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:
             return Response({'message': 'Item status not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.item_borrow_status = Borrow_statuse.objects.get(b_status_id= request.data.get('item_borrow_status'))
+            exist_data.item_borrow_status = Borrow_status.objects.get(b_status_id= request.data.get('item_borrow_status'))
         except ObjectDoesNotExist:
             return Response({'message': 'Borrow status not found'}, status=status.HTTP_404_NOT_FOUND)
         exist_data.item_description = request.data.get('item_description')
         exist_data.item_note = request.data.get('item_note')
+        #FOR UPLOAD FILE
+        file_path_within_bucket=""
+        media_storage = MediaStorage()
+        if(request.FILES.get('file', False)):
+            file_obj = request.FILES.get('file', '')
+
+            # do your validation here e.g. file size/type check
+
+            # organize a path for the file in bucket
+            file_directory_within_bucket = 'media/'
+            file_type = '.'+file_obj.name.split('.')[1]
+            # synthesize a full file path; note that we included the filename
+            file_path_within_bucket = os.path.join(
+                file_directory_within_bucket,
+                str(uuid.uuid4())+file_type
+            )
+            exist_data.item_img_url.delete() 
+            if not media_storage.exists(file_path_within_bucket): # avoid overwriting existing file
+                media_storage.save(file_path_within_bucket, file_obj)
+                file_url = media_storage.url(file_path_within_bucket)
+            else:
+                return Response({
+                    'message': 'Error: file {filename} already exists at {file_directory} in bucket {bucket_name}'.format(
+                        filename=file_obj.name,
+                        file_directory=file_directory_within_bucket,
+                        bucket_name=media_storage.bucket_name
+                    ),
+                }, status=400)
+            exist_data.item_img_url = file_path_within_bucket
+
         exist_data.save()
         return Response({'message':'Edited'},status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-from rest_framework.authentication import get_authorization_header
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.exceptions import APIException , AuthenticationFailed
 
-from .authentication import create_access_token, create_refresh_token , decode_access_token , decode_refresh_token
-from .serializers import UserSerializer
-from .models import User
+@api_view(['DELETE'])
+def delete_item_info(request,item_id):
+    try:
+        item_info = Item.objects.get(item_id = item_id)
+        item_info.item_img_url.delete()
+        item_info.delete()
+        return Response({'message':'Deleted'},status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+
+#AUTH SYSTEM
+# Set the refresh token as a cookie in the response
+def set_refresh_token(response, refresh_token):
+    response.set_cookie('refresh_token', refresh_token, httponly=True, max_age=604800)  # 7 days in seconds
+
+# Get the refresh token from the request cookies
+def get_refresh_token(request):
+    return request.COOKIES.get('refresh_token')
 
 class RegisterAPIView(APIView):
     def post(self, request):

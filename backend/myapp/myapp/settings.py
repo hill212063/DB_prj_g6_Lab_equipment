@@ -31,7 +31,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#     ]
+# }
 # Application definition
 
 INSTALLED_APPS = [
@@ -88,7 +92,7 @@ DATABASES = {
         'USER': env('DATABASE_USER'),
         'PASSWORD': env('DATABASE_PASS'),
         'HOST': env('DATABASE_HOST'),   # Or an IP Address that your DB is hosted on
-        'PORT': 3306,
+        'PORT': env('DATABASE_PORT'),
     }
 }
 SECRET_KEY = env('SECRET_KEY')
@@ -136,3 +140,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+DEFAULT_FILE_STORAGE = env('DEFAULT_FILE_STORAGE')
+AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
+AWS_S3_ACCESS_KEY_ID = env('AWS_S3_ACCESS_KEY_ID')
+AWS_S3_SECRET_ACCESS_KEY = env('AWS_S3_SECRET_ACCESS_KEY')
+AWS_IS_GZIPPED = env('AWS_IS_GZIPPED') == 'True'
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
