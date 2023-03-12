@@ -1,11 +1,6 @@
 from rest_framework import serializers
 from .models import *
 
-class FacultiesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Facultie
-        fields = ('f_id','f_name')
-
 class ItemsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
