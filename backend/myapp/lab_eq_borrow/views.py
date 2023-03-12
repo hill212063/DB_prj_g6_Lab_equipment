@@ -67,8 +67,10 @@ from rest_framework.permissions import IsAuthenticated
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated, CanViewItems])
 def items(request):
+    # get only item that borrowed
     try:
-        allitems = Item.objects.all()
+        available_status = Borrow_statuse.objects.filter(b_status_name="available") 
+        allitems = Item.objects.filter(item_status =  available_status.b_status_id )
         serializer = ItemsSerializer(allitems,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
