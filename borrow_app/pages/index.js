@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <>
     <div className={styles.container}>
-      <h1 className={styles.title}>Login</h1>
+      <h1>Login</h1>
       <form onSubmit={handleSubmit} className={styles.form}>
         <label htmlFor="email" className={styles.label}>Email:</label>
         <input
@@ -46,8 +46,6 @@ export default function Home() {
         />
         <button type="submit" className={styles.button}>Login</button>
       </form>
-      
-     
     </div>
     <UserFooter/>
     </>

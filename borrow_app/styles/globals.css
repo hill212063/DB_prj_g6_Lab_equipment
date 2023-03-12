@@ -1,57 +1,73 @@
-*{
-    padding : 0;
-    margin : 0;
-    box-sizing: border-box;
-    font-family: 'Poppins' , sans-serif;
-    /* list-style: none; */
-    
-}
-:root{
-    --bg-color: #220332;
-    --text-color: #4f6b9d;
-    --hover-color: #419373;
-    --main-color: #419373;
-    --footer-color: #220332;
-    --white-text-color:#fff;
-}
+/* User Navbar */
 
-/* Usernav CSS */
-.userNav{
-    margin: 10px auto;
-    padding: 10px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+#mainUserNav {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-weight: 700;
 }
-.userNav .Logo{
-    margin-right: auto;
-    padding-left: 10px;
-
+#mainUserNav .navbar-brand {
+  color: #fff;
 }
-
-.userNav a{
-    color: var(--text-color);
-    text-decoration: none;
-    margin-left: 12px;
-    font-size: 18px;
-    padding: 10px;
-
+#mainUserNav .navbar-nav {
+  margin-top: 1rem;
+}
+#mainUserNav .navbar-nav li.nav-item a.nav-link {
+  color: #fff;
+}
+#mainUserNav .navbar-nav li.nav-item a.nav-link:hover {
+  color: #1abc9c;
+}
+#mainUserNav .navbar-nav li.nav-item a.nav-link:active, #mainUserNav .navbar-nav li.nav-item a.nav-link:focus {
+  color: #fff;
+}
+#mainUserNav .navbar-nav li.nav-item a.nav-link.active {
+  color: #1abc9c;
+}
+#mainUserNav .navbar-toggler {
+  font-size: 80%;
+  padding: 0.8rem;
 }
 
-.userNav .NavBTN a:hover{
-    color: var(--hover-color);
+@media (min-width: 992px) {
+  #mainUserNav {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    transition: padding-top 0.3s, padding-bottom 0.3s;
+  }
+  #mainUserNav .navbar-brand {
+    font-size: 1.75em;
+    transition: font-size 0.3s;
+  }
+  #mainUserNav .navbar-nav {
+    margin-top: 0;
+  }
+  #mainUserNav .navbar-nav > li.nav-item > a.nav-link.active {
+    color: #fff;
+    background: #1abc9c;
+  }
+  #mainUserNav .navbar-nav > li.nav-item > a.nav-link.active:active, #mainNav .navbar-nav > li.nav-item > a.nav-link.active:focus, #mainNav .navbar-nav > li.nav-item > a.nav-link.active:hover {
+    color: #fff;
+    background: #1abc9c;
+  }
+
+  #mainUserNav.navbar-shrink {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  #mainUserNav.navbar-shrink .navbar-brand {
+    font-size: 1.5em;
+  }
 }
 
 /* User Footer */
 footer{
     position: relative;
-    height: 139px;
+    height: 140px;
     padding: 30px 70px;
     background: #282828;
     flex-wrap: wrap;
-
-    margin-top: 100px;
-
+    margin-top: 10px;
     
 }
 
@@ -67,6 +83,14 @@ footer .Footer-container .section-about p {
 
 /* Bootstrap css */
 :root {
+    --footer-color: #220332;
+    --white-text-color:#fff;
+    --bs-navcolor-rgb: #2b4f46;
+
+    /* Hamburger color */
+    --bs-menu-rgb: 13, 202, 240;
+    --bs-navbgcolor-rgb: 44, 62, 80;
+
     --bs-blue: #0d6efd;
     --bs-indigo: #6610f2;
     --bs-purple: #6f42c1;
@@ -100,6 +124,7 @@ footer .Footer-container .section-about p {
     --bs-primary-rgb: 13, 110, 253;
     --bs-secondary-rgb: 108, 117, 125;
     --bs-success-rgb: 25, 135, 84;
+    
     --bs-info-rgb: 13, 202, 240;
     --bs-warning-rgb: 255, 193, 7;
     --bs-danger-rgb: 220, 53, 69;
@@ -3097,13 +3122,13 @@ footer .Footer-container .section-about p {
     
     .btn-primary {
       color: #fff;
-      background-color: #0d6efd;
-      border-color: #0d6efd;
+      background-color: #198754;
+      border-color: #198754;
     }
     .btn-primary:hover {
       color: #fff;
-      background-color: #0b5ed7;
-      border-color: #0a58ca;
+      background-color: #14643f;
+      border-color: #14643f;
     }
     .btn-check:focus + .btn-primary, .btn-primary:focus {
       color: #fff;
@@ -3153,6 +3178,11 @@ footer .Footer-container .section-about p {
       color: #fff;
       background-color: #6c757d;
       border-color: #6c757d;
+    }
+    .btn-navcolor {
+      color: #fff;
+      background-color: #2b4f46;
+      
     }
     
     .btn-success {
@@ -7876,6 +7906,10 @@ footer .Footer-container .section-about p {
       --bs-bg-opacity: 1;
       background-color: rgba(var(--bs-primary-rgb), var(--bs-bg-opacity)) !important;
     }
+    .bg-navcolor {
+      --bs-bg-opacity: 1;
+      background-color: rgba(var(--bs-navbgcolor-rgb), var(--bs-bg-opacity)) !important;
+    }
     
     .bg-secondary {
       --bs-bg-opacity: 1;
@@ -7885,6 +7919,11 @@ footer .Footer-container .section-about p {
     .bg-success {
       --bs-bg-opacity: 1;
       background-color: rgba(var(--bs-success-rgb), var(--bs-bg-opacity)) !important;
+    }
+
+    .bg-menu {
+      --bs-bg-opacity: 1;
+      background-color: rgba(var(--bs-menu-rgb), var(--bs-bg-opacity)) !important;
     }
     
     .bg-info {

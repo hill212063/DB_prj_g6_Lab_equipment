@@ -1,56 +1,126 @@
-.label{
-    display: flex;
-    font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-  flex-direction: column;
-    align-items: center;
+.blogMain {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 50px;
 }
-.box {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 300px;
-    height: 400px;
-    background-color: #f1f1f1;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-  }
-  
-  .label2 {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-  
-  .image {
-    margin-bottom: 20px;
-  }
-  
-  .button {
-    background-color: #4caf50;
-    border: none;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  
-  .button:hover {
-    background-color: #3e8e41;
-  }
-  .labelsearch {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-  }
-  .center{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-top: 40px;
 
-  }
+.blogTitle {
+  margin-top: 100px;
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.blogDescription {
+  font-size: 18px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* Search */
+.searchBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem 0;
+  
+}
+.searchBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  
+}
+
+.searchBar input[type="text"] {
+  width: 50%;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 5px 0 0 5px;
+  font-size: 1rem;
+  border: 2px solid black;
+  border-radius: 5px;
+  
+}
+
+.searchBar button {
+  padding: 0.5rem 1rem;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.searchBar button:hover {
+  background-color: #3e8e41;
+}
+.searchBtn {
+  margin-left: 30px;
+}
+
+
+
+
+/* Post */
+
+#posts {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.post {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  box-shadow: 5px 1px 15px 2px #ccc;
+  padding: 30px;
+}
+
+.textBlogPost {
+  margin-left: 40px;
+}
+
+.post:last-child {
+  margin-right: 0;
+}
+
+.post h3 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.postAuthor, .postDate {
+  font-size: 16px;
+  margin-bottom: auto;
+  margin-top: auto;
+  font-weight: bold;
+}
+
+.postExcerpt {
+  font-size: 14px;
+  margin-bottom: 15px;
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+.readMoreBtn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 13px 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  float: right;
+}
+
+.readMoreBtn:hover {
+  background-color: #3e8e41;
+}
