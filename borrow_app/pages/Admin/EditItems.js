@@ -2,6 +2,7 @@ import AdminFooter from "@/components/AdminFooter";
 import AdminNavbar from "@/components/AdminNavbar";
 import AdminSidebar from "@/components/AdminSidebar";
 import Head from "next/head";
+import Image from 'next/image';
 
 export default function EditItems(params) {
     return(
@@ -109,6 +110,24 @@ export default function EditItems(params) {
                           <div class="col-md-12 mb-3">
                             <label for="">Note</label>
                             <textarea name="note" required class="form-control" rows="4"></textarea>
+                          </div>
+
+                          {/* Select picture Btn here */}
+                          <div class="col-md-12 mb-3">
+                            <label for="">Picture</label>
+                            <div class="input-group">
+                              <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="inputGroupFile04" aria-describedby="inputGroupFileAddon04"/>
+                                <label class="custom-file-label" for="inputGroupFile04">Choose Picture</label>
+                              </div>
+                              
+                              {/* Show image url when select image in directory */}
+                              <div id="url-display"></div>
+                            </div>
+                            {/* Show Picture when select and save picture file in public/items/ */}
+                            <div>
+                              <Image id="picture-preview" width={300} height={300}/>
+                            </div>
                           </div>
                           
                           <div class="col-md-12 mb-3">

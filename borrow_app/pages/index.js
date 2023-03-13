@@ -3,13 +3,14 @@ import Link from "next/link"
 import styles from "@/styles/Home.module.css"
 import react from 'react'
 import { useState } from 'react';
+import axios from 'axios';
 
 export default function Home() {
-  const [email, setEmail] = useState('');
+  const [ICITID, setICITID] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
+  const handleICITChange = (e) => {
+    setICITID(e.target.value);
   };
 
   const handlePasswordChange = (e) => {
@@ -18,20 +19,26 @@ export default function Home() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Implement login logic here
-  };
+    axios.post('/api/login', { ICITID, password })
+    .then((response) => {
+      console.log(response.data);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+};
 
   return (
     <>
     <div className={styles.container}>
       <h1>Login</h1>
       <form onSubmit={handleSubmit} className={styles.form}>
-        <label htmlFor="email" className={styles.label}>Email:</label>
+        <label htmlFor="ICIT" className={styles.label}>Email:</label>
         <input
-          type="email"
-          id="email"
-          value={email}
-          onChange={handleEmailChange}
+          type="text"
+          id="ICITID"
+          value={ICITID}
+          onChange={handleICITChange}
           className={styles.input}
           required
         />

@@ -11,20 +11,27 @@ export default function MyBorrowed() {
     const [items, setItems] = useState([]);
   
     useEffect(() => {
-      // You can add your axios request here to fetch items from your MongoDB database
-      // For example:
-      // axios.get('/api/items')
-      //   .then(response => setItems(response.data))
-      //   .catch(error => console.log(error))
+      const fetchData = async () => {
+        try {
+          const response = await axios.get('/api/items');
+          setItems(response.data);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      fetchData();
     }, []);
   
-    const handleSearch = (event) => {
+    const handleSearch = async (event) => {
       event.preventDefault();
-      // You can add your code to search for items based on the searchTerm here
-      // For example:
-      // const filteredItems = items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      // setItems(filteredItems)
+      try {
+        const response = await axios.get(`/api/items?search=${searchTerm}`);
+        setItems(response.data);
+      } catch (error) {
+        console.log(error);
+      }
     };
+    
   
     return (
       <>
