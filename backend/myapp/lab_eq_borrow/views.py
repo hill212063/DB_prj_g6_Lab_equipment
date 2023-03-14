@@ -23,6 +23,7 @@ from rest_framework.exceptions import APIException , AuthenticationFailed
 from .storages import MediaStorage
 import os
 import uuid
+from datetime import datetime  
 # Create your views here.
 # def index(request):
 #     objs = Item.objects.all().values()
@@ -31,6 +32,17 @@ import uuid
 #         json_data.append(obj)
 
 #     return JsonResponse(json_data, safe=False, json_dumps_params={'ensure_ascii': False})
+
+@api_view(['GET'])
+def update_expire():
+    try:
+        expire_status = Borrow_status.objects.filter(b_status_name="expire") 
+        expired_items = Borrow_info.objects.filter(b_return_time=datetime.now())
+        for i in expired_items:
+            Item.objects.filter(item_id = i.b_item).update(item_status = expire_status.b_status_id)
+        return Response({'message':'Expire Item updated'},status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def all_faculties(request):
@@ -61,7 +73,7 @@ def all_items(request):
 
 
 
-from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import IsAuthenticated
 
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated, CanViewItems])
@@ -109,6 +121,10 @@ def contact(request):
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated, IsStudent])
 def borrowed_item(request):
+    try:
+        update_expire()
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     try:
         borrowings = Borrow_info.objects.filter(b_user=request.user)
         borrowed_items = []
@@ -602,6 +618,8 @@ class UserAPIView(APIView):
 
         raise AuthenticationFailed('unauthenticated')
     
+
+
 class RefreshAPIView(APIView):
     def post(self, request):
         refresh_token = request.COOKIES.get('refreshToken')

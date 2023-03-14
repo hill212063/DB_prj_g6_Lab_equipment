@@ -2,6 +2,9 @@ from django.urls import path
 from .views import *
 urlpatterns = [
     # path('', index),
+
+    path('api/update-expire/',update_expire),
+
     path('api/all-faculties/', all_faculties),
     path('api/all-departments/', all_departments),
     path('api/all-items/', all_items),
