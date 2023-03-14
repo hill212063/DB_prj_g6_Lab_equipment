@@ -1,60 +1,129 @@
 from django.db import models
-
+from .storages import MediaStorage
 # Create your models here.
 
-class Faculty(models.Model):
-    name = models.CharField(max_length=100)
+class Borrow_status(models.Model):
+    b_status_id = models.AutoField(primary_key=True)
+    b_status_name = models.CharField(max_length=100)
+    
+    class Meta:
+        db_table = "borrow_statuses"
+
+    def __str__(self):
+        return self.b_status_name
+    
+class User_privilege(models.Model):
+    p_id = models.AutoField(primary_key=True)
+    p_name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "user_privileges"
+        
+    def __str__(self):
+        return self.p_name
 
 class Department(models.Model):
-    name = models.CharField(max_length=100)
+    d_id = models.AutoField(primary_key=True)
+    d_name = models.CharField(max_length=100)
 
-class User_privileges(models.Model):
-    name = models.CharField(max_length=100)
+    class Meta:
+        db_table = "departments"
 
-class Id_types(models.Model):
-    name = models.CharField(max_length=100)
+    def __str__(self):
+        return self.d_name
 
-class Item_categories(models.Model):
-    name = models.CharField(max_length=100)
+class Faculty(models.Model):
+    f_id = models.AutoField(primary_key=True)
+    f_name = models.CharField(max_length=100)
 
-class Item_statuses(models.Model):
-    name = models.CharField(max_length=100)
+    class Meta:
+        db_table = "faculties"
 
-class Borrow_statuses(models.Model):
-    name = models.CharField(max_length=100)
+    def __str__(self):
+        return self.f_name
+
+class Id_type(models.Model):
+    t_id = models.AutoField(primary_key=True)
+    t_name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "id_types"
+
+    def __str__(self):
+        return self.t_name
+
+class Item_category(models.Model):
+    item_cate_id = models.AutoField(primary_key=True)
+    item_cate_name =models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "item_categories"
+
+    def __str__(self):
+        return self.item_cate_name
+    
+class Item_status(models.Model):
+    item_status_id = models.AutoField(primary_key=True)
+    item_status_name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "item_statuses"
+
+    def __str__(self):
+        return self.item_status_name
 
 class User(models.Model):
-    u_name = models.CharField(max_length=200)
-    u_password = models.CharField(max_length=200)
-    u_email = models.CharField(max_length=200)
+    u_id = models.AutoField(primary_key=True)
+    u_name = models.CharField(max_length=100, unique=True)
+    u_password = models.CharField(max_length=100)
+    u_email = models.EmailField(max_length=100,unique=True )
     u_tel = models.IntegerField()
-    u_faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='users_faculty')
-    u_department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='users_department')
-    u_privilege = models.ForeignKey(User_privileges, on_delete=models.CASCADE, related_name='users_privilege')
-    u_create_at = models.DateTimeField(auto_now_add=True)
-    u_update_at = models.DateTimeField(auto_now=True)
+    u_faculty = models.ForeignKey(Faculty, on_delete=models.DO_NOTHING, related_name='users')
+    u_department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, related_name='users')
+    u_privilege = models.ForeignKey(User_privilege, on_delete=models.DO_NOTHING, related_name='users')
+    u_created_at = models.DateTimeField(auto_now_add=True)
+    u_updated_at = models.DateTimeField(auto_now=True)
 
-class Item (models.Model):
-    item_id = models.CharField(max_length=200)
-    item_id_type = models.ForeignKey(Id_types, on_delete=models.CASCADE, related_name='item_id_type')
-    item_name = models.CharField(max_length=200)
-    item_category = models.ForeignKey(Item_categories, on_delete=models.CASCADE, related_name='item_item_categories')
-    item_description = models.CharField(max_length=200)
-    item_faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='item_faculty')
-    item_department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='item_department')
-    item_status = models.ForeignKey(Item_statuses, on_delete=models.CASCADE, related_name='item_status')
-    item_borrow_status = models.ForeignKey(Borrow_statuses, on_delete=models.CASCADE, related_name='item_borrow_status')
-    item_note = models.CharField(max_length=200)
-    item_img_url = models.CharField(max_length=200)
-    item_create_at = models.DateTimeField(auto_now_add=True)
-    item_update_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        db_table = "users"
 
-class Borrow_info (models.Model):
-    b_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='borrow_info_item')
-    b_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='borrow_info_user')
-    b_location = models.CharField(max_length=200)
-    b_note =  models.CharField(max_length=200)
-    b_borrow_time = models.DateTimeField(auto_now=True)
-    b_return_time = models.DateTimeField(auto_now=True)
-    b_create_at = models.DateTimeField(auto_now_add=True)
-    b_update_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return "%s %s %s" % (self.u_name,self.u_faculty,self.u_department)
+    
+class Item(models.Model):
+    item_id = models.CharField(primary_key =True,max_length=50)
+    item_id_type = models.ForeignKey(Id_type, on_delete = models.DO_NOTHING)
+    item_name = models.CharField(max_length=100)
+    item_category = models.ForeignKey(Item_category,on_delete = models.DO_NOTHING)
+    item_description = models.TextField()
+    item_faculty = models.ForeignKey(Faculty, on_delete = models.DO_NOTHING)
+    item_department = models.ForeignKey(Department,on_delete = models.DO_NOTHING)
+    item_status = models.ForeignKey(Item_status,on_delete = models.DO_NOTHING)
+    item_borrow_status = models.ForeignKey(Borrow_status, on_delete = models.DO_NOTHING)
+    item_note = models.TextField()
+    item_img_url = models.FileField(storage=MediaStorage,upload_to = 'media/',blank=True, null=True) 
+    item_created_at = models.DateTimeField(auto_now_add=True)
+    item_updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        db_table = "items"
+    def __str__(self):
+        return self.item_name
+    
+    def s3_url(self):
+        return self.item_img_url.url
+
+
+class Borrow_info(models.Model):
+    b_id = models.AutoField(primary_key =True)
+    b_item = models.ForeignKey(Item, on_delete=models.DO_NOTHING,max_length=50)
+    b_user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    b_location = models.TextField()
+    b_note = models.TextField()
+    b_borrow_time = models.DateTimeField()
+    b_return_time = models.DateTimeField()
+    b_created_at = models.DateTimeField(auto_now_add=True)
+    b_updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        db_table = "borrow_info"
+    def __str__(self):
+        return self.b_user
