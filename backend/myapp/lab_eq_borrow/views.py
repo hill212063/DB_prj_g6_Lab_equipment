@@ -37,7 +37,7 @@ from datetime import datetime
 def update_expire():
     try:
         expire_status = Borrow_status.objects.filter(b_status_name="expire") 
-        expired_items = Borrow_info.objects.filter(b_return_time=datetime.now())
+        expired_items = Borrow_info.objects.filter(b_return_time__lte=datetime.now())
         for i in expired_items:
             Item.objects.filter(item_id = i.b_item).update(item_status = expire_status.b_status_id)
         return Response({'message':'Expire Item updated'},status = status.HTTP_200_OK)
