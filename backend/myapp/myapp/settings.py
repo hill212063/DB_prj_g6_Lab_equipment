@@ -138,7 +138,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+        "http://localhost:8080/",
+]
 
 DEFAULT_FILE_STORAGE = env('DEFAULT_FILE_STORAGE')
 AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
