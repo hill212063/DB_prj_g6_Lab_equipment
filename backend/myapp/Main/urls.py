@@ -1,17 +1,38 @@
-from django.urls import re_path
-from Main import views
-
+from django.urls import path
+from .views import *
 urlpatterns = [
-    re_path(r'^faculty$',views.facultyApi),
-    re_path(r'^faculty/([0-9]+)$',views.facultyApi),
 
-    re_path(r'^department$',views.departmentApi),
-    re_path(r'^department/([0-9]+)$',views.departmentApi),
+    path('api/update-expire/',update_expire),
 
-    re_path(r'^user_privilege$',views.user_privileges_api),
-    re_path(r'^user_privilege/([0-9]+)$',views.user_privileges_api),
+    path('api/all-faculties/', all_faculties),
+    path('api/all-departments/', all_departments),
+    path('api/all-items/', all_items),
 
-    re_path(r'^user$',views.user_api),
-    re_path(r'^user/([0-9]+)$',views.user_api)
+    path('api/login/', LoginAPIView.as_view()),
+    path('api/register', RegisterAPIView.as_view()),
+    path('api/user', UserAPIView.as_view()),
+    path('api/refresh', RefreshAPIView.as_view()),
+    path('api/logout', LogoutAPIView.as_view()),
+
+    path('api/items/', items),
+    path('api/items/<int:item_id>/', item_details),
+    path('api/contact/', contact),
+    path('api/borrowed/', borrowed_item),
+
+    path('api/dashboard/user-management/', user_management),
+    path('api/dashboard/user-management/add/', add_user),
+    path('api/dashboard/user-management/edit/<int:user_id>/', edit_user),
+    path('api/dashboard/user-management/edit/<int:user_id>/',delete_user),
+
+    path('api/dashboard/borrowing-info/', borrowing_info),
+    path('api/dashboard/borrowing-info/add/', add_borrowing_info),
+    path('api/dashboard/borrowing-info/edit/<int:info_id>/', edit_borrowing_info),
+    path('api/dashboard/borrowing-info/delete/<int:info_id>/', delete_borrowing_info),
+
+    path('api/dashboard/item-info/', item_info),
+    path('api/dashboard/item-info/add/', add_item_info),
+    path('api/dashboard/item-info/edit/<str:item_id>/', edit_item_info),
+    path('api/dashboard/item-info/delete/<str:item_id>/', delete_item_info),
+
 
 ]
