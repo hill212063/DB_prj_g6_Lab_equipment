@@ -584,12 +584,12 @@ class RegisterAPIView(APIView):
     
 class LoginAPIView(APIView):
     def post(self, request):
-        user = User.objects.filter(u_email=request.data['u_email']).first()
+        user = User.objects.filter(u_email=request.data.get('u_email').first()
 
         if not user:
             raise APIException('Invalid credentials!')
 
-        if user.u_password != request.data['u_password']:
+        if user.u_password != request.data.get('u_password'):
             raise APIException('Invalid credentials!')
       
         access_token = create_access_token(user.u_id,str(user.u_privilege))
