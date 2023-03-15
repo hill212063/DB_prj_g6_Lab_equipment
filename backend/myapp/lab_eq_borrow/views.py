@@ -599,7 +599,7 @@ class LoginAPIView(APIView):
         role = ""
         response.set_cookie(key='refreshToken', value=refresh_token, httponly=True)
         try:
-            role = User_privilege.objects.filter(p_id = user.u_privilege).first().p_name;
+            role = str(user.u_privilege);
             response.data = {
                 'role': role,
                 'token': access_token
