@@ -24,7 +24,7 @@ urlpatterns = [
     path('api/dashboard/user-management/', user_management),
     path('api/dashboard/user-management/add/', add_user),
     path('api/dashboard/user-management/edit/<int:user_id>/', edit_user),
-    path('api/dashboard/user-management/edit/<int:user_id>/',delete_user),
+    path('api/dashboard/user-management/delete/<int:user_id>/',delete_user),
 
     path('api/dashboard/borrowing-info/', borrowing_info),
     path('api/dashboard/borrowing-info/add/', add_borrowing_info),
