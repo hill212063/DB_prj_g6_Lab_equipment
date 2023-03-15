@@ -13,7 +13,7 @@ from .serializers import *
 
 from .authentication import create_access_token, create_refresh_token , decode_access_token , decode_refresh_token
 from .permissions import *
-from .backends import *
+# from .backends import *
 
 from rest_framework.authentication import get_authorization_header
 from rest_framework.response import Response
@@ -596,13 +596,18 @@ class LoginAPIView(APIView):
         refresh_token = create_refresh_token(user.u_id,str(user.u_privilege))
 
         response = Response()
-
+        role = ""
         response.set_cookie(key='refreshToken', value=refresh_token, httponly=True)
-        response.data = {
-            'token': access_token
-        }
-
-        return response
+        try:
+            role = User_privilege.objects.filter(p_id = user.u_privilege).first().p_name;
+            response.data = {
+                'role': role,
+                'token': access_token
+            }
+            return response
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     
 class UserAPIView(APIView):
     def get(self, request):
