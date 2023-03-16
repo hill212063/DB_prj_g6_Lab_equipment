@@ -11,8 +11,8 @@ urlpatterns = [
 
     path('api/login/', LoginAPIView.as_view()),
     path('api/register', RegisterAPIView.as_view()),
-    path('api/user', UserAPIView.as_view()),
-    path('api/refresh', RefreshAPIView.as_view()),
+    # path('api/user', UserAPIView.as_view()),
+    # path('api/refresh', RefreshAPIView.as_view()),
     path('api/logout', LogoutAPIView.as_view()),
 
     path('api/items/', items),

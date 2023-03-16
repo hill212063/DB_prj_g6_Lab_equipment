@@ -593,11 +593,11 @@ class LoginAPIView(APIView):
             raise APIException('Invalid credentials!')
       
         access_token = create_access_token(user.u_id,str(user.u_privilege))
-        refresh_token = create_refresh_token(user.u_id,str(user.u_privilege))
+        # refresh_token = create_refresh_token(user.u_id,str(user.u_privilege))
 
         response = Response()
         role = ""
-        response.set_cookie(key='refreshToken', value=refresh_token, httponly=True)
+        # response.set_cookie(key='refreshToken', value=refresh_token, httponly=True)
         try:
             role = str(user.u_privilege);
             response.data = {
@@ -609,37 +609,37 @@ class LoginAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
-class UserAPIView(APIView):
-    def get(self, request):
-        auth = get_authorization_header(request).split()
+# class UserAPIView(APIView):
+#     def get(self, request):
+#         auth = get_authorization_header(request).split()
 
-        if auth and len(auth) == 2:
-            token = auth[1].decode('utf-8')
-            id = decode_access_token(token)[0]
+#         if auth and len(auth) == 2:
+#             token = auth[1].decode('utf-8')
+#             id = decode_access_token(token)[0]
 
-            user = User.objects.filter(pk=id).first()
+#             user = User.objects.filter(pk=id).first()
 
-            return Response(UserSerializer(user).data)
+#             return Response(UserSerializer(user).data)
 
-        raise AuthenticationFailed('unauthenticated')
+#         raise AuthenticationFailed('unauthenticated')
     
 
 
-class RefreshAPIView(APIView):
-    def post(self, request):
-        refresh_token = request.COOKIES.get('refreshToken')
+# class RefreshAPIView(APIView):
+#     def post(self, request):
+#         refresh_token = request.COOKIES.get('refreshToken')
  
-        id = decode_refresh_token(refresh_token)[0]
-        role = decode_refresh_token(refresh_token)[1]
-        access_token = create_access_token(id,role)
-        return Response({
-            'token': access_token
-        })
+#         id = decode_refresh_token(refresh_token)[0]
+#         role = decode_refresh_token(refresh_token)[1]
+#         access_token = create_access_token(id,role)
+#         return Response({
+#             'token': access_token
+#         })
 
 class LogoutAPIView(APIView):
     def post(self, _):
         response = Response()
-        response.delete_cookie(key="refreshToken")
+        # response.delete_cookie(key="refreshToken")
         response.data = {
             'message': 'success'
         }
