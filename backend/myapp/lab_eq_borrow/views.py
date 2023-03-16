@@ -34,7 +34,7 @@ from datetime import datetime
 #     return JsonResponse(json_data, safe=False, json_dumps_params={'ensure_ascii': False})
 
 @api_view(['GET'])
-def update_expire():
+def update_expire(request):
     try:
         expire_status = Borrow_status.objects.filter(b_status_name="expire") 
         expired_items = Borrow_info.objects.filter(b_return_time__lte=datetime.now())
