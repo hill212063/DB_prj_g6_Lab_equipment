@@ -36,10 +36,11 @@ from datetime import datetime
 @api_view(['GET'])
 def update_expire(request):
     try:
-        expire_status = Borrow_status.objects.filter(b_status_name="expire") 
+        expire_status = Borrow_status.objects.get(b_status_name="Expired")
         expired_items = Borrow_info.objects.filter(b_return_time__lte=datetime.now())
-        for i in expired_items:
-            Item.objects.filter(item_id = i.b_item).update(item_status = expire_status.b_status_id)
+        if(expire_status.b_status_id):
+            for i in expired_items:
+                Item.objects.filter(item_id = i.b_item.item_id).update( item_borrow_status = expire_status.b_status_id)
         return Response({'message':'Expire Item updated'},status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -80,7 +81,7 @@ def all_items(request):
 def items(request):
     # get only item that borrowed
     try:
-        available_status = Borrow_status.objects.filter(b_status_name="available") 
+        available_status = Borrow_status.objects.get(b_status_name="Available") 
         allitems = Item.objects.filter(item_status =  available_status.b_status_id )
         serializer = ItemSerializer(allitems,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
@@ -122,26 +123,25 @@ def contact(request):
 #@permission_classes([IsAuthenticated, IsStudent])
 def borrowed_item(request):
     try:
-        update_expire()
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    try:
-        borrowings = Borrow_info.objects.filter(b_user=request.user)
+    
+        user_id,role = decode_access_token(request.data.get('token'))
+        available_status = Borrow_status.objects.get(b_status_name="Available")
+        borrowings = Borrow_info.objects.filter(b_user=user_id).filter(b_item__in=Item.objects.exclude(item_status=available_status.b_status_id))
         borrowed_items = []
         for borrowing in borrowings:
             item = borrowing.b_item
             item_data = {
                 'item_id': item.item_id,
-                'item_id_type': item.item_id_type,
+                'item_id_type': item.item_id_type.t_name,
                 'item_name': item.item_name,
-                'item_category': item.item_category,
+                'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
-                'item_faculty': item.item_faculty.faculty_name, # Accessing faculty name from Faculty model
-                'item_department': item.item_department.department_name, # Accessing department name from Department model
+                'item_faculty': item.item_faculty.f_name, # Accessing faculty name from Faculty model
+                'item_department': item.item_department.d_name, # Accessing department name from Department model
                 'item_status': item.item_borrow_status.b_status_name # Accessing borrow status name from Borrow_statuse model
             }
-            borrowed_items.append(item_data,status = status.HTTP_200_OK)
-        return Response(borrowed_items)
+            borrowed_items.append(item_data)
+        return Response(borrowed_items,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -267,9 +267,6 @@ def delete_user(request,user_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
-
-
 @api_view(['GET'])
 def borrowing_info(request):
     try:
@@ -284,7 +281,7 @@ def borrowing_info(request):
 def add_borrowing_info(request):
     ''' หน้าตาของ request
     b_item
-    b_user
+    b_user as email
     b_borrow_time
     b_return_time
     b_location
@@ -293,18 +290,19 @@ def add_borrowing_info(request):
     try:
         try:
             b_item=Item.objects.get(item_id= request.data.get('b_item'))
+            borrowed_status = Borrow_status.objects.get(b_status_name="Borrowed")
+            Item.objects.filter(item_id= request.data.get('b_item')).update(item_borrow_status=borrowed_status.b_status_id)
         except ObjectDoesNotExist:
             return Response({'message': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            b_user=User.objects.get(item_id= request.data.get('b_item'))
+            b_user=User.objects.get(u_email= request.data.get('b_user'))
         except ObjectDoesNotExist:
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        
         b_borrow_time=request.data.get('b_borrow_time')
         b_return_time=request.data.get('b_return_time')
         b_location=request.data.get('b_location')
         b_note = request.data.get('b_note')
-        inserted_data = User.objects.create(
+        inserted_data = Borrow_info.objects.create(
             b_item= b_item,
             b_user=b_user,
             b_borrow_time=b_borrow_time,
@@ -322,7 +320,7 @@ def add_borrowing_info(request):
 def edit_borrowing_info(request,info_id):
     ''' หน้าตาของ request
     b_item
-    b_user
+    b_user as email
     b_borrow_time
     b_return_time
     b_location
@@ -338,7 +336,7 @@ def edit_borrowing_info(request,info_id):
         except ObjectDoesNotExist:
             return Response({'message': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.b_user = User.objects.get(u_id=request.data.get('b_user'))
+            exist_data.b_user = User.objects.get(u_email=request.data.get('b_user'))
         except ObjectDoesNotExist:
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
