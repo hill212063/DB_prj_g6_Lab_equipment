@@ -1,43 +1,48 @@
 from django.shortcuts import render
 from django.http import HttpResponse , HttpResponseRedirect,JsonResponse
 from django.template import loader
+from .models import *
 from django.urls import reverse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, permission_required
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
+from .serializers import *
+
 from .authentication import create_access_token, create_refresh_token , decode_access_token , decode_refresh_token
-#from .permissions import *
+from .permissions import *
+# from .backends import *
+
 from rest_framework.authentication import get_authorization_header
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import APIException , AuthenticationFailed
+from django.core.exceptions import ObjectDoesNotExist
 
+from .storages import MediaStorage
 import os
 import uuid
-from .storages import MediaStorage
 from datetime import datetime  
-from .models import *
-from .serializers import *
+# Create your views here.
+# def index(request):
+#     objs = Item.objects.all().values()
+#     json_data = []
+#     for obj in objs:
+#         json_data.append(obj)
+
+#     return JsonResponse(json_data, safe=False, json_dumps_params={'ensure_ascii': False})
 
 @api_view(['GET'])
-def update_expire():
+def update_expire(request):
     try:
-        expire_status = Borrow_status.objects.filter(b_status_name="expire") 
+        expire_status = Borrow_status.objects.get(b_status_name="Expired")
         expired_items = Borrow_info.objects.filter(b_return_time__lte=datetime.now())
-        for i in expired_items:
-            Item.objects.filter(item_id = i.b_item).update(item_status = expire_status.b_status_id)
+        if(expire_status.b_status_id):
+            for i in expired_items:
+                Item.objects.filter(item_id = i.b_item.item_id).update( item_borrow_status = expire_status.b_status_id)
         return Response({'message':'Expire Item updated'},status = status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['GET'])
-def all_faculties(request):
-    try:
-        allfaculties = Faculty.objects.all()
-        serializer = FacultySerializer(allfaculties,many = True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -46,6 +51,15 @@ def all_departments(request):
     try:
         alldepartments = Department.objects.all()
         serializer = DepartmentSerializer(alldepartments,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def all_majors(request):
+    try:
+        allmajors = Major.objects.all()
+        serializer = MajorSerializer(allmajors,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -68,7 +82,7 @@ def all_items(request):
 def items(request):
     # get only item that borrowed
     try:
-        available_status = Borrow_status.objects.filter(b_status_name="available") 
+        available_status = Borrow_status.objects.get(b_status_name="Available") 
         allitems = Item.objects.filter(item_status =  available_status.b_status_id )
         serializer = ItemSerializer(allitems,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
@@ -86,8 +100,8 @@ def item_details(request, item_id):
             'item_name': item.item_name,
             'item_category': item.item_category,
             'item_description': item.item_description,
-            'item_faculty': item.item_faculty,
             'item_department': item.item_department,
+            'item_major': item.item_major,
             'item_status': item.item_status,
             'item_borrow_status': item.item_borrow_status,
             'item_note': item.item_note,
@@ -110,26 +124,25 @@ def contact(request):
 #@permission_classes([IsAuthenticated, IsStudent])
 def borrowed_item(request):
     try:
-        update_expire()
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    try:
-        borrowings = Borrow_info.objects.filter(b_user=request.user)
+    
+        user_id,role = decode_access_token(request.data.get('token'))
+        available_status = Borrow_status.objects.get(b_status_name="Available")
+        borrowings = Borrow_info.objects.filter(b_user=user_id).filter(b_item__in=Item.objects.exclude(item_status=available_status.b_status_id))
         borrowed_items = []
         for borrowing in borrowings:
             item = borrowing.b_item
             item_data = {
                 'item_id': item.item_id,
-                'item_id_type': item.item_id_type,
+                'item_id_type': item.item_id_type.t_name,
                 'item_name': item.item_name,
-                'item_category': item.item_category,
+                'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
-                'item_faculty': item.item_faculty.faculty_name, # Accessing faculty name from Faculty model
-                'item_department': item.item_department.department_name, # Accessing department name from Department model
+                'item_department': item.item_department.d_name, # Accessing department name from department model
+                'item_major': item.item_major.m_name, # Accessing major name from major model
                 'item_status': item.item_borrow_status.b_status_name # Accessing borrow status name from Borrow_statuse model
             }
-            borrowed_items.append(item_data,status = status.HTTP_200_OK)
-        return Response(borrowed_items)
+            borrowed_items.append(item_data)
+        return Response(borrowed_items,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -143,8 +156,15 @@ def user_management(request):
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-from django.core.exceptions import ObjectDoesNotExist
+    
+@api_view(['GET'])
+def user_by_id(request,user_id):
+    try:
+        user = User.objects.get(u_id=user_id)
+        serializer = UserSerializer(user,many=False)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def add_user(request):
@@ -155,8 +175,8 @@ def add_user(request):
         "u_email": "user@email.com",
         "u_password": "password",
         "u_tel": "1234567890",
-        "u_faculty": 1,  // Faculty id
-        "u_department": 1,  // Department id
+        "u_department": 1,  // department id
+        "u_major": 1,  // major id
         "u_privilege": 1  // User privileges id
     }
     '''
@@ -167,21 +187,21 @@ def add_user(request):
         u_email = request.data.get('u_email')
         u_password = request.data.get('u_password')
         u_tel = request.data.get('u_tel')
-        u_faculty_id = request.data.get('u_faculty')
         u_department_id = request.data.get('u_department')
+        u_major_id = request.data.get('u_major')
         u_privilege_id = request.data.get('u_privilege')
-
-        # Check if faculty exists
-        try:
-            u_faculty = Faculty.objects.get(f_id=u_faculty_id)
-        except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if department exists
         try:
             u_department = Department.objects.get(d_id=u_department_id)
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if major exists
+        try:
+            u_major = Major.objects.get(m_id=u_major_id)
+        except ObjectDoesNotExist:
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if user privilege exists
         try:
@@ -195,8 +215,8 @@ def add_user(request):
             u_email=u_email,
             u_password=u_password,
             u_tel=u_tel,
-            u_faculty=u_faculty,
             u_department=u_department,
+            u_major=u_major,
             u_privilege=u_privilege
         )
         inserted_data.save()
@@ -208,17 +228,14 @@ def add_user(request):
 
 @api_view(['POST'])
 def edit_user(request,user_id):
-    '''
-    Expected request body:
-    {
-        u_name
-        u_email
-        u_password
-        u_tel
-        u_faculty
-        u_department
-        u_privilege
-    }
+    ''' หน้าตาของ request
+    u_name
+    u_email
+    u_password
+    u_tel
+    u_department
+    u_major
+    u_privilege
     '''
     try:
         try:
@@ -230,13 +247,13 @@ def edit_user(request,user_id):
         exist_data.u_password = request.data.get('u_password')
         exist_data.u_tel = request.data.get('u_tel')
         try:
-            exist_data.u_faculty = Faculty.objects.get(f_id=request.data.get('u_faculty'))
-        except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
-        try:
             exist_data.u_department = Department.objects.get(d_id=request.data.get('u_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            exist_data.u_major = Major.objects.get(m_id=request.data.get('u_major'))
+        except ObjectDoesNotExist:
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             exist_data.u_privilege = User_privilege.objects.get(p_id =request.data.get('u_privilege'))
         except ObjectDoesNotExist:
@@ -258,9 +275,6 @@ def delete_user(request,user_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
-
-
 @api_view(['GET'])
 def borrowing_info(request):
     try:
@@ -275,7 +289,7 @@ def borrowing_info(request):
 def add_borrowing_info(request):
     ''' หน้าตาของ request
     b_item
-    b_user
+    b_user as email
     b_borrow_time
     b_return_time
     b_location
@@ -284,18 +298,19 @@ def add_borrowing_info(request):
     try:
         try:
             b_item=Item.objects.get(item_id= request.data.get('b_item'))
+            borrowed_status = Borrow_status.objects.get(b_status_name="Borrowed")
+            Item.objects.filter(item_id= request.data.get('b_item')).update(item_borrow_status=borrowed_status.b_status_id)
         except ObjectDoesNotExist:
             return Response({'message': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            b_user=User.objects.get(item_id= request.data.get('b_item'))
+            b_user=User.objects.get(u_email= request.data.get('b_user'))
         except ObjectDoesNotExist:
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        
         b_borrow_time=request.data.get('b_borrow_time')
         b_return_time=request.data.get('b_return_time')
         b_location=request.data.get('b_location')
         b_note = request.data.get('b_note')
-        inserted_data = User.objects.create(
+        inserted_data = Borrow_info.objects.create(
             b_item= b_item,
             b_user=b_user,
             b_borrow_time=b_borrow_time,
@@ -313,7 +328,7 @@ def add_borrowing_info(request):
 def edit_borrowing_info(request,info_id):
     ''' หน้าตาของ request
     b_item
-    b_user
+    b_user as email
     b_borrow_time
     b_return_time
     b_location
@@ -329,7 +344,7 @@ def edit_borrowing_info(request,info_id):
         except ObjectDoesNotExist:
             return Response({'message': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.b_user = User.objects.get(u_id=request.data.get('b_user'))
+            exist_data.b_user = User.objects.get(u_email=request.data.get('b_user'))
         except ObjectDoesNotExist:
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -363,6 +378,15 @@ def item_info(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def item_by_id(request, item_id):
+    try:
+        item_info = Item.objects.get(item_id=item_id)
+        serializer = ItemSerializer( item_info,many=False)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['POST'])
 def add_item_info(request):
     '''request:
@@ -370,8 +394,8 @@ def add_item_info(request):
     item_id_type
     item_name
     item_category
-    item_faculty
     item_department
+    item_major
     item_status
     item_borrow_status
     item_description
@@ -393,14 +417,14 @@ def add_item_info(request):
             return Response({'message': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
-            item_faculty=Faculty.objects.get(f_id= request.data.get('item_faculty'))
+            item_department=Department.objects.get(d_id= request.data.get('item_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
-            item_department=Department.objects.get(d_id=request.data.get('item_department'))
+            item_major=Major.objects.get(m_id=request.data.get('item_major'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             item_status=Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:
@@ -446,8 +470,8 @@ def add_item_info(request):
             item_id_type= item_id_type,
             item_name=item_name,
             item_category=item_category,
-            item_faculty=item_faculty,
             item_department=item_department,
+            item_major=item_major,
             item_status=item_status,
             item_borrow_status=item_borrow_status,
             item_description=item_description,
@@ -467,8 +491,8 @@ def edit_item_info(request, item_id):
     item_id_type
     item_name
     item_category
-    item_faculty
     item_department
+    item_major
     item_status
     item_borrow_status
     item_description
@@ -492,13 +516,13 @@ def edit_item_info(request, item_id):
         except ObjectDoesNotExist:
             return Response({'message': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.item_faculty =Faculty.objects.get(f_id=  request.data.get('item_faculty'))
+            exist_data.item_department =Department.objects.get(d_id=  request.data.get('item_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.item_department = Department.objects.get(d_id=request.data.get('item_department'))
+            exist_data.item_major = Major.objects.get(m_id=request.data.get('item_major'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             exist_data.item_status =Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:
@@ -575,57 +599,62 @@ class RegisterAPIView(APIView):
     
 class LoginAPIView(APIView):
     def post(self, request):
-        user = User.objects.filter(u_email=request.data['u_email']).first()
+        user = User.objects.filter(u_email=request.data.get('u_email')).first()
 
         if not user:
             raise APIException('Invalid credentials!')
 
-        if user.u_password != request.data['u_password']:
+        if user.u_password != request.data.get('u_password'):
             raise APIException('Invalid credentials!')
       
         access_token = create_access_token(user.u_id,str(user.u_privilege))
-        refresh_token = create_refresh_token(user.u_id,str(user.u_privilege))
+        # refresh_token = create_refresh_token(user.u_id,str(user.u_privilege))
 
         response = Response()
-
-        response.set_cookie(key='refreshToken', value=refresh_token, httponly=True)
-        response.data = {
-            'token': access_token
-        }
-
-        return response
+        role = ""
+        # response.set_cookie(key='refreshToken', value=refresh_token, httponly=True)
+        try:
+            role = str(user.u_privilege);
+            response.data = {
+                'role': role,
+                'token': access_token
+            }
+            return response
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-class UserAPIView(APIView):
-    def get(self, request):
-        auth = get_authorization_header(request).split()
+    
+# class UserAPIView(APIView):
+#     def get(self, request):
+#         auth = get_authorization_header(request).split()
 
-        if auth and len(auth) == 2:
-            token = auth[1].decode('utf-8')
-            id = decode_access_token(token)[0]
+#         if auth and len(auth) == 2:
+#             token = auth[1].decode('utf-8')
+#             id = decode_access_token(token)[0]
 
-            user = User.objects.filter(pk=id).first()
+#             user = User.objects.filter(pk=id).first()
 
-            return Response(UserSerializer(user).data)
+#             return Response(UserSerializer(user).data)
 
-        raise AuthenticationFailed('unauthenticated')
+#         raise AuthenticationFailed('unauthenticated')
     
 
 
-class RefreshAPIView(APIView):
-    def post(self, request):
-        refresh_token = request.COOKIES.get('refreshToken')
+# class RefreshAPIView(APIView):
+#     def post(self, request):
+#         refresh_token = request.COOKIES.get('refreshToken')
  
-        id = decode_refresh_token(refresh_token)[0]
-        role = decode_refresh_token(refresh_token)[1]
-        access_token = create_access_token(id,role)
-        return Response({
-            'token': access_token
-        })
+#         id = decode_refresh_token(refresh_token)[0]
+#         role = decode_refresh_token(refresh_token)[1]
+#         access_token = create_access_token(id,role)
+#         return Response({
+#             'token': access_token
+#         })
 
 class LogoutAPIView(APIView):
     def post(self, _):
         response = Response()
-        response.delete_cookie(key="refreshToken")
+        # response.delete_cookie(key="refreshToken")
         response.data = {
             'message': 'success'
         }
