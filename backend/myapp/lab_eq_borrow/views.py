@@ -132,7 +132,7 @@ def items(request):
             item_data = {
                 'item_id': item.item_id,
                 'item_id_type': item.item_id_type.t_name,
-                'item_img_url': item.item_img_url ,
+                'item_img_url': (item.item_img_url) or "" ,
                 'item_name': item.item_name,
                 'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
@@ -159,7 +159,7 @@ def item_details(request, item_id):
             'item_status': item.item_status,
             'item_borrow_status': item.item_borrow_status,
             'item_note': item.item_note,
-            'item_img_url': item.item_img_url,
+            'item_img_url': (item.item_img_url) or "" ,
             'item_created_at': item.item_created_at,
             'item_updated_at': item.item_updated_at,
         }
@@ -193,7 +193,8 @@ def borrowed_item(request):
                 'item_description': item.item_description,
                 'item_department': item.item_department.d_name, # Accessing department name from department model
                 'item_major': item.item_major.m_name, # Accessing major name from major model
-                'item_status': item.item_borrow_status.b_status_name # Accessing borrow status name from Borrow_statuse model
+                'item_status': item.item_borrow_status.b_status_name, # Accessing borrow status name from Borrow_statuse model
+                'item_img_url': (item.item_img_url) or "" ,
             }
             borrowed_items.append(item_data)
         return Response(borrowed_items,status = status.HTTP_200_OK)
