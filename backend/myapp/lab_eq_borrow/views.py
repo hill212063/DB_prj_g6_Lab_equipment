@@ -73,19 +73,73 @@ def all_items(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def all_roles(request):
+    try:
+        allroles = User_privilege.objects.all()
+        serializer =  UserPrivilegeSerializer(allroles,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# from rest_framework.permissions import IsAuthenticated
+# @api_view(['GET'])
+# def all_idtypes(request):
+#     try:
+#         allidtypes = Id_type.objects.all()
+#         serializer = IdTypeSerializer(allidtypes,many = True)
+#         return Response(serializer.data,status = status.HTTP_200_OK)
+#     except Exception as e:
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# @api_view(['GET'])
+# def all_categories(request):
+#     try:
+#         allcates = Item_category.objects.all()
+#         serializer = ItemCategorySerializer(allcates,many = True)
+#         return Response(serializer.data,status = status.HTTP_200_OK)
+#     except Exception as e:
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# @api_view(['GET'])
+# def all_item_statuses(request):
+#     try:
+#         all_item_statuses = Item_status.objects.all()
+#         serializer = ItemStatusSerializer(all_item_statuses,many = True)
+#         return Response(serializer.data,status = status.HTTP_200_OK)
+#     except Exception as e:
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# @api_view(['GET'])
+# def all_borrow_statuses(request):
+#     try:
+#         all_borrow_statuses = Borrow_status.objects.all()
+#         serializer = Borrow_statusSerializer(all_borrow_statuses,many = True)
+#         return Response(serializer.data,status = status.HTTP_200_OK)
+#     except Exception as e:
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
-#@permission_classes([IsAuthenticated, CanViewItems])
 def items(request):
     # get only item that borrowed
     try:
         available_status = Borrow_status.objects.get(b_status_name="Available") 
         allitems = Item.objects.filter(item_status =  available_status.b_status_id )
-        serializer = ItemSerializer(allitems,many = True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        item_datas = []
+        for item in allitems:
+            
+            item_data = {
+                'item_id': item.item_id,
+                'item_id_type': item.item_id_type.t_name,
+                'item_img_url': item.item_img_url ,
+                'item_name': item.item_name,
+                'item_category': item.item_category.item_cate_name,
+                'item_description': item.item_description,
+                'item_borrow_status': item.item_borrow_status.b_status_name # Accessing borrow status name from Borrow_statuse model
+            }
+            item_datas.append(item_data)
+        return Response(item_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -152,8 +206,18 @@ def borrowed_item(request):
 def user_management(request):
     try:
         users = User.objects.all()
-        serializer = UserSerializer(users,many=True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        user_datas = []
+        for user in users:
+            user_data = {
+                'u_id': user.u_id,
+                'u_name': user.u_name,
+                'u_tel': user.u_tel,
+                'u_department': user.u_department.d_name,
+                'u_major': user.u_major.m_name, 
+                'u_privilege': user.u_privilege.p_name 
+                }
+            user_datas.append(user_data)
+        return Response(user_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
@@ -279,8 +343,19 @@ def delete_user(request,user_id):
 def borrowing_info(request):
     try:
         b_infos = Borrow_info.objects.all()
-        serializer = BorrowInfoSerializer( b_infos,many=True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        borrow_datas = []
+        for borrow in b_infos:
+            borrow_data = {
+                'b_id': borrow.b_id,
+                'b_user': borrow.b_user.u_email,
+                'b_item': borrow.b_item.item_id,
+                'b_borrow_time': borrow.b_borrow_time,
+                'b_return_time': borrow.b_return_time,
+                'b_location': borrow.b_location, 
+                'b_note': borrow.b_note 
+                }
+            borrow_datas.append(borrow_data)
+        return Response(borrow_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
@@ -373,8 +448,18 @@ def delete_borrowing_info(request,info_id):
 def item_info(request):
     try:
         item_infos = Item.objects.all()
-        serializer = ItemSerializer( item_infos,many=True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        item_datas = []
+        for item in item_infos:
+            item_data = {
+                'item_id': item.item_id,
+                'item_id_type':item.item_id_type.t_name,
+                'item_name': item.item_name,
+                'item_department': item.item_department.d_name,
+                'item_major': item.item_major.m_name,
+                'item_borrow_status': item.item_borrow_status.b_status_name,
+                }
+            item_datas.append(item_data)
+        return Response(item_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

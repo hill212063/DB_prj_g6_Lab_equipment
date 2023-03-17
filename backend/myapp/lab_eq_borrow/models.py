@@ -77,7 +77,7 @@ class User(models.Model):
     u_name = models.CharField(max_length=100, unique=True)
     u_password = models.CharField(max_length=100)
     u_email = models.EmailField(max_length=100,unique=True )
-    u_tel = models.IntegerField()
+    u_tel = models.CharField(max_length=10)
     u_department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, related_name='users')
     u_major = models.ForeignKey(Major, on_delete=models.DO_NOTHING, related_name='users')
     u_privilege = models.ForeignKey(User_privilege, on_delete=models.DO_NOTHING, related_name='users')

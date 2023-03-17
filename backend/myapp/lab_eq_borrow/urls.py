@@ -9,6 +9,13 @@ urlpatterns = [
     path('api/all-departments/', all_departments),
     path('api/all-majors/', all_majors),
     path('api/all-items/', all_items),
+    path('api/all-roles/',all_roles),
+    # path('api/all-idtypes/',all_idtypes),
+    # path('api/all-categories/',all_categories),
+    # path('api/all-item_statuses',all_item_statuses),
+
+
+
 
     path('api/login/', LoginAPIView.as_view()),
     path('api/register', RegisterAPIView.as_view()),
