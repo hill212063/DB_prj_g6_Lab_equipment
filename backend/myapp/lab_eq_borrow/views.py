@@ -19,6 +19,7 @@ from rest_framework.authentication import get_authorization_header
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import APIException , AuthenticationFailed
+from django.core.exceptions import ObjectDoesNotExist
 
 from .storages import MediaStorage
 import os
@@ -46,19 +47,19 @@ def update_expire(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-def all_faculties(request):
+def all_departments(request):
     try:
-        allfaculties = Faculty.objects.all()
-        serializer = FacultySerializer(allfaculties,many = True)
+        alldepartments = Department.objects.all()
+        serializer = DepartmentSerializer(alldepartments,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-def all_departments(request):
+def all_majors(request):
     try:
-        alldepartments = Department.objects.all()
-        serializer = DepartmentSerializer(alldepartments,many = True)
+        allmajors = Major.objects.all()
+        serializer = MajorSerializer(allmajors,many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -99,8 +100,8 @@ def item_details(request, item_id):
             'item_name': item.item_name,
             'item_category': item.item_category,
             'item_description': item.item_description,
-            'item_faculty': item.item_faculty,
             'item_department': item.item_department,
+            'item_major': item.item_major,
             'item_status': item.item_status,
             'item_borrow_status': item.item_borrow_status,
             'item_note': item.item_note,
@@ -136,8 +137,8 @@ def borrowed_item(request):
                 'item_name': item.item_name,
                 'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
-                'item_faculty': item.item_faculty.f_name, # Accessing faculty name from Faculty model
-                'item_department': item.item_department.d_name, # Accessing department name from Department model
+                'item_department': item.item_department.d_name, # Accessing department name from department model
+                'item_major': item.item_major.m_name, # Accessing major name from major model
                 'item_status': item.item_borrow_status.b_status_name # Accessing borrow status name from Borrow_statuse model
             }
             borrowed_items.append(item_data)
@@ -155,8 +156,15 @@ def user_management(request):
         return Response(serializer.data,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-from django.core.exceptions import ObjectDoesNotExist
+    
+@api_view(['GET'])
+def user_by_id(request,user_id):
+    try:
+        user = User.objects.get(u_id=user_id)
+        serializer = UserSerializer(user,many=False)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def add_user(request):
@@ -167,8 +175,8 @@ def add_user(request):
         "u_email": "user@email.com",
         "u_password": "password",
         "u_tel": "1234567890",
-        "u_faculty": 1,  // Faculty id
-        "u_department": 1,  // Department id
+        "u_department": 1,  // department id
+        "u_major": 1,  // major id
         "u_privilege": 1  // User privileges id
     }
     '''
@@ -179,21 +187,21 @@ def add_user(request):
         u_email = request.data.get('u_email')
         u_password = request.data.get('u_password')
         u_tel = request.data.get('u_tel')
-        u_faculty_id = request.data.get('u_faculty')
         u_department_id = request.data.get('u_department')
+        u_major_id = request.data.get('u_major')
         u_privilege_id = request.data.get('u_privilege')
-
-        # Check if faculty exists
-        try:
-            u_faculty = Faculty.objects.get(f_id=u_faculty_id)
-        except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if department exists
         try:
             u_department = Department.objects.get(d_id=u_department_id)
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if major exists
+        try:
+            u_major = Major.objects.get(m_id=u_major_id)
+        except ObjectDoesNotExist:
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if user privilege exists
         try:
@@ -207,8 +215,8 @@ def add_user(request):
             u_email=u_email,
             u_password=u_password,
             u_tel=u_tel,
-            u_faculty=u_faculty,
             u_department=u_department,
+            u_major=u_major,
             u_privilege=u_privilege
         )
         inserted_data.save()
@@ -225,8 +233,8 @@ def edit_user(request,user_id):
     u_email
     u_password
     u_tel
-    u_faculty
     u_department
+    u_major
     u_privilege
     '''
     try:
@@ -239,13 +247,13 @@ def edit_user(request,user_id):
         exist_data.u_password = request.data.get('u_password')
         exist_data.u_tel = request.data.get('u_tel')
         try:
-            exist_data.u_faculty = Faculty.objects.get(f_id=request.data.get('u_faculty'))
-        except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
-        try:
             exist_data.u_department = Department.objects.get(d_id=request.data.get('u_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            exist_data.u_major = Major.objects.get(m_id=request.data.get('u_major'))
+        except ObjectDoesNotExist:
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             exist_data.u_privilege = User_privilege.objects.get(p_id =request.data.get('u_privilege'))
         except ObjectDoesNotExist:
@@ -370,6 +378,15 @@ def item_info(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def item_by_id(request, item_id):
+    try:
+        item_info = Item.objects.get(item_id=item_id)
+        serializer = ItemSerializer( item_info,many=False)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['POST'])
 def add_item_info(request):
     '''request:
@@ -377,8 +394,8 @@ def add_item_info(request):
     item_id_type
     item_name
     item_category
-    item_faculty
     item_department
+    item_major
     item_status
     item_borrow_status
     item_description
@@ -400,14 +417,14 @@ def add_item_info(request):
             return Response({'message': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
-            item_faculty=Faculty.objects.get(f_id= request.data.get('item_faculty'))
+            item_department=Department.objects.get(d_id= request.data.get('item_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
-            item_department=Department.objects.get(d_id=request.data.get('item_department'))
+            item_major=Major.objects.get(m_id=request.data.get('item_major'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             item_status=Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:
@@ -453,8 +470,8 @@ def add_item_info(request):
             item_id_type= item_id_type,
             item_name=item_name,
             item_category=item_category,
-            item_faculty=item_faculty,
             item_department=item_department,
+            item_major=item_major,
             item_status=item_status,
             item_borrow_status=item_borrow_status,
             item_description=item_description,
@@ -474,8 +491,8 @@ def edit_item_info(request, item_id):
     item_id_type
     item_name
     item_category
-    item_faculty
     item_department
+    item_major
     item_status
     item_borrow_status
     item_description
@@ -499,13 +516,13 @@ def edit_item_info(request, item_id):
         except ObjectDoesNotExist:
             return Response({'message': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.item_faculty =Faculty.objects.get(f_id=  request.data.get('item_faculty'))
+            exist_data.item_department =Department.objects.get(d_id=  request.data.get('item_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Faculty not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
-            exist_data.item_department = Department.objects.get(d_id=request.data.get('item_department'))
+            exist_data.item_major = Major.objects.get(m_id=request.data.get('item_major'))
         except ObjectDoesNotExist:
-            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             exist_data.item_status =Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:

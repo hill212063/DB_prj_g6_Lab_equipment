@@ -4,7 +4,7 @@ from .models import *
 admin.site.register(Borrow_status)
 admin.site.register(User_privilege)
 admin.site.register(Department)
-admin.site.register(Faculty)
+admin.site.register(Major)
 admin.site.register(Id_type)
 admin.site.register(Item_category)
 admin.site.register(Item_status)

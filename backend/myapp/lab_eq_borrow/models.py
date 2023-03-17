@@ -22,22 +22,22 @@ class User_privilege(models.Model):
     def __str__(self):
         return self.p_name
 
+class Major(models.Model):
+    m_id = models.AutoField(primary_key=True)
+    m_name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "Majors"
+
+    def __str__(self):
+        return self.d_name
+
 class Department(models.Model):
     d_id = models.AutoField(primary_key=True)
     d_name = models.CharField(max_length=100)
 
     class Meta:
         db_table = "departments"
-
-    def __str__(self):
-        return self.d_name
-
-class Faculty(models.Model):
-    f_id = models.AutoField(primary_key=True)
-    f_name = models.CharField(max_length=100)
-
-    class Meta:
-        db_table = "faculties"
 
     def __str__(self):
         return self.f_name
@@ -78,8 +78,8 @@ class User(models.Model):
     u_password = models.CharField(max_length=100)
     u_email = models.EmailField(max_length=100,unique=True )
     u_tel = models.IntegerField()
-    u_faculty = models.ForeignKey(Faculty, on_delete=models.DO_NOTHING, related_name='users')
     u_department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, related_name='users')
+    u_major = models.ForeignKey(Major, on_delete=models.DO_NOTHING, related_name='users')
     u_privilege = models.ForeignKey(User_privilege, on_delete=models.DO_NOTHING, related_name='users')
     u_created_at = models.DateTimeField(auto_now_add=True)
     u_updated_at = models.DateTimeField(auto_now=True)
@@ -88,7 +88,7 @@ class User(models.Model):
         db_table = "users"
 
     def __str__(self):
-        return "%s %s %s" % (self.u_name,self.u_faculty,self.u_department)
+        return "%s %s %s" % (self.u_name,self.u_department,self.u_major)
     
 class Item(models.Model):
     item_id = models.CharField(primary_key =True,max_length=50)
@@ -96,8 +96,8 @@ class Item(models.Model):
     item_name = models.CharField(max_length=100)
     item_category = models.ForeignKey(Item_category,on_delete = models.DO_NOTHING)
     item_description = models.TextField()
-    item_faculty = models.ForeignKey(Faculty, on_delete = models.DO_NOTHING)
-    item_department = models.ForeignKey(Department,on_delete = models.DO_NOTHING)
+    item_department = models.ForeignKey(Department, on_delete = models.DO_NOTHING)
+    item_major = models.ForeignKey(Major,on_delete = models.DO_NOTHING)
     item_status = models.ForeignKey(Item_status,on_delete = models.DO_NOTHING)
     item_borrow_status = models.ForeignKey(Borrow_status, on_delete = models.DO_NOTHING)
     item_note = models.TextField()

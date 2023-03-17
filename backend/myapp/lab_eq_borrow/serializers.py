@@ -14,15 +14,15 @@ class UserPrivilegeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DepartmentSerializer(serializers.ModelSerializer):
+class MajorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Department
+        model = Major
         fields = '__all__'
 
 
-class FacultySerializer(serializers.ModelSerializer):
+class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Faculty
+        model = Department
         fields = '__all__'
 
 

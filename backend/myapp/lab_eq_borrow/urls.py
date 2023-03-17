@@ -3,10 +3,11 @@ from .views import *
 urlpatterns = [
     # path('', index),
 
+
     path('api/update-expire/',update_expire),
 
-    path('api/all-faculties/', all_faculties),
     path('api/all-departments/', all_departments),
+    path('api/all-majors/', all_majors),
     path('api/all-items/', all_items),
 
     path('api/login/', LoginAPIView.as_view()),
@@ -22,6 +23,7 @@ urlpatterns = [
 
     #path('api/dashboard/', dashboard),
     path('api/dashboard/user-management/', user_management),
+    path('api/dashboard/user-management/<int:user_id>/', user_by_id),
     path('api/dashboard/user-management/add/', add_user),
     path('api/dashboard/user-management/edit/<int:user_id>/', edit_user),
     path('api/dashboard/user-management/delete/<int:user_id>/',delete_user),
@@ -32,6 +34,7 @@ urlpatterns = [
     path('api/dashboard/borrowing-info/delete/<int:info_id>/', delete_borrowing_info),
 
     path('api/dashboard/item-info/', item_info),
+    path('api/dashboard/item-info/<str:item_id>/', item_by_id),
     path('api/dashboard/item-info/add/', add_item_info),
     path('api/dashboard/item-info/edit/<str:item_id>/', edit_item_info),
     path('api/dashboard/item-info/delete/<str:item_id>/', delete_item_info),
