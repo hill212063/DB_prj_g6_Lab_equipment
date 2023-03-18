@@ -83,41 +83,41 @@ def all_roles(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# @api_view(['GET'])
-# def all_idtypes(request):
-#     try:
-#         allidtypes = Id_type.objects.all()
-#         serializer = IdTypeSerializer(allidtypes,many = True)
-#         return Response(serializer.data,status = status.HTTP_200_OK)
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@api_view(['GET'])
+def all_idtypes(request):
+    try:
+        allidtypes = Id_type.objects.all()
+        serializer = IdTypeSerializer(allidtypes,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# @api_view(['GET'])
-# def all_categories(request):
-#     try:
-#         allcates = Item_category.objects.all()
-#         serializer = ItemCategorySerializer(allcates,many = True)
-#         return Response(serializer.data,status = status.HTTP_200_OK)
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@api_view(['GET'])
+def all_categories(request):
+    try:
+        allcates = Item_category.objects.all()
+        serializer = ItemCategorySerializer(allcates,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# @api_view(['GET'])
-# def all_item_statuses(request):
-#     try:
-#         all_item_statuses = Item_status.objects.all()
-#         serializer = ItemStatusSerializer(all_item_statuses,many = True)
-#         return Response(serializer.data,status = status.HTTP_200_OK)
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@api_view(['GET'])
+def all_item_statuses(request):
+    try:
+        all_item_statuses = Item_status.objects.all()
+        serializer = ItemStatusSerializer(all_item_statuses,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# @api_view(['GET'])
-# def all_borrow_statuses(request):
-#     try:
-#         all_borrow_statuses = Borrow_status.objects.all()
-#         serializer = Borrow_statusSerializer(all_borrow_statuses,many = True)
-#         return Response(serializer.data,status = status.HTTP_200_OK)
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@api_view(['GET'])
+def all_borrow_statuses(request):
+    try:
+        all_borrow_statuses = Borrow_status.objects.all()
+        serializer = Borrow_statusSerializer(all_borrow_statuses,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -136,7 +136,8 @@ def items(request):
                 'item_name': item.item_name,
                 'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
-                'item_borrow_status': item.item_borrow_status.b_status_name # Accessing borrow status name from Borrow_statuse model
+                'item_borrow_status': item.item_borrow_status.b_status_name,
+                'item_status':item.item_status.item_status_name
             }
             item_datas.append(item_data)
         return Response(item_datas,status = status.HTTP_200_OK)
@@ -360,6 +361,22 @@ def borrowing_info(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+@api_view(['GET'])
+def borrowing_by_id(request,info_id):
+    try:
+        b_info_data = Borrow_info.objects.get(b_id=info_id)
+        borrow_data = {
+                'b_id': b_info_data.b_id,
+                'b_user': b_info_data.b_user.u_email,
+                'b_item': b_info_data.b_item.item_id,
+                'b_borrow_time': b_info_data.b_borrow_time,
+                'b_return_time': b_info_data.b_return_time,
+                'b_location': b_info_data.b_location, 
+                'b_note': b_info_data.b_note 
+                }
+        return Response(borrow_data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
 
 @api_view(['POST'])
 def add_borrowing_info(request):
@@ -373,7 +390,8 @@ def add_borrowing_info(request):
     '''
     try:
         try:
-            b_item=Item.objects.get(item_id= request.data.get('b_item'))
+            print(request.data.get('b_item'))
+            b_item=Item.objects.get(item_id=request.data.get('b_item'))
             borrowed_status = Borrow_status.objects.get(b_status_name="Borrowed")
             Item.objects.filter(item_id= request.data.get('b_item')).update(item_borrow_status=borrowed_status.b_status_id)
         except ObjectDoesNotExist:
@@ -505,12 +523,12 @@ def add_item_info(request):
         try:
             item_department=Department.objects.get(d_id= request.data.get('item_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
             item_major=Major.objects.get(m_id=request.data.get('item_major'))
         except ObjectDoesNotExist:
-            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'Major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             item_status=Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:
