@@ -127,7 +127,7 @@ def items(request):
     # get only item that borrowed
     try:
         available_status = Borrow_status.objects.get(b_status_name="Available") 
-        allitems = Item.objects.filter(item_status =  available_status.b_status_id )
+        allitems = Item.objects.filter(item_borrow_status =  available_status.b_status_id )
         item_datas = []
         for item in allitems:
             
