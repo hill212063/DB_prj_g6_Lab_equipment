@@ -25,7 +25,7 @@ from .storages import MediaStorage
 import os
 import uuid
 from django.utils import timezone
-from datetime import datetime  
+from datetime import datetime
 
 # Create your views here.
 # def index(request):
@@ -397,22 +397,29 @@ def add_borrowing_info(request):
             b_user=User.objects.get(u_email= request.data.get('b_user'))
         except ObjectDoesNotExist:
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        b_borrow_time=request.data.get('b_borrow_time')
-        b_return_time=request.data.get('b_return_time')
+
+        #b_borrow_time=request.data.get('b_borrow_time')
+        #b_return_time=request.data.get('b_return_time')
         b_location=request.data.get('b_location')
         b_note = request.data.get('b_note')
-        inserted_data = Borrow_info.objects.create(
+        borrow_time = datetime.strptime(request.data['b_borrow_time'], '%Y-%m-%dT%H:%M:%S.%f%z')
+        return_time = datetime.strptime(request.data['b_return_time'], '%Y-%m-%dT%H:%M:%S.%f%z')
+        inserted_data = Borrow_info(
             b_item= b_item,
             b_user=b_user,
-            b_borrow_time=b_borrow_time,
-            b_return_time=b_return_time,
+            b_borrow_time=borrow_time,
+            b_return_time=return_time,
             b_location= b_location,
             b_note =  b_note
         )
         inserted_data.save()
         return Response({'message':'Added'},status = status.HTTP_200_OK)
+
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 
 @api_view(['POST'])
