@@ -2,3 +2,7 @@
 **env/
 **node_modules/
 **__pycache__/
+# mac problem
+.DS_Store
+
+.env*

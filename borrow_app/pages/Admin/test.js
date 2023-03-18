@@ -1,56 +1,36 @@
-// Import the FontAwesomeIcon component
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import the icons you need
-import {
-  faBars
-} from "@fortawesome/free-solid-svg-icons";
 import AdminFooter from "@/components/AdminFooter";
 import AdminNavbar from "@/components/AdminNavbar";
 import AdminSidebar from "@/components/AdminSidebar";
 import Head from "next/head";
 import Link from "next/link";
 import axios from "axios";
-import { useState,useEffect } from "react";
-import { useRouter } from "next/router";
+import { useState } from "react";
+import { useEffect } from "react";
+import Script from "next/script";
 import DataTable from 'react-data-table-component';
 
-
-export default function ItemManage() {
-  const router = useRouter()
+export default function test() {
   const [Item,setItem] = useState([]);
   const [search,setSearch] = useState("");
   const [filteredItems, setFilteredItems] = useState([]);
 
   const fetchData = async () => {
     try {
-     axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_BACKEND}/api/update-expire/`)
-      .then(res =>{ 
-        axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_BACKEND}/api/dashboard/item-info/`)
-        .then(response => {
-          // console.log(response);
-          setItem(response.data);
-          setFilteredItems(response.data);
-        })
-        .catch(error => {
-          console.log(error);
-        });
-      }
-      ).catch(error => {
+      axios.get('http://localhost:8000/api/dashboard/item-info/')
+      .then(response => {
+        // console.log(response);
+        setItem(response.data);
+        setFilteredItems(response.data);
+      })
+      .catch(error => {
         console.log(error);
       });
-      
-
     } catch (error) {
       console.log(error);
     }
   }
 
   useEffect(()=>{ 
-    let role = window.localStorage.getItem('role');
-    let token = window.localStorage.getItem('token');
-    if((role !== 'Admin') || !token){
-      router.push('/')
-    }
     fetchData();
   }, []);
 
@@ -76,63 +56,34 @@ export default function ItemManage() {
 
   const columns = [
     {
-      name: "ITEM ID",
+      name : "ITEM ID",
       selector: row => row.item_id,
       sortable: true,
-      sortField: "item_id",
-      style: {
-        fontSize: "12px", fontWeight: "bold"
-
-      }
     },
     {
-      name: "ITEM TYPE",
+      name : "ITEM TYPE",
       selector: row => row.item_id_type,
       sortable: true,
-      sortField: "item_id_type",
-      style: {
-        fontSize: "14px"
-
-      }
     },
     {
-      name: "ITEM NAME",
+      name : "ITEM NAME",
       selector: row => row.item_name,
       sortable: true,
-      sortField: "item_name",
-      style: {
-        fontSize: "14px",
-
-      }
     },
     {
-      name: "DEPARTMENT",
+      name : "FACULTY",
+      selector: row => row.item_faculty,
+      sortable: true,
+    },
+    {
+      name : "DEPARTMENT",
       selector: row => row.item_department,
       sortable: true,
-      sortField: "item_department",
-      style: {
-        fontSize: "16px",
-      
-
-      }
-    },
-    {
-      name : "MAJOR",
-      selector: row => row.item_major,
-      sortable: true,
-      sortField: "item_major",
-      style: {
-        fontSize: "16px",
-      }
     },
     {
       name : "BORROW STATUS",
-      selector: row => row.item_borrow_status,
+      selector: row => row.item_status,
       sortable: true,
-      sortField: "item_borrow_status",
-      style: {
-        fontSize: "16px",
-      }
     },
     {
       name : "EDIT / MORE",
@@ -152,15 +103,6 @@ export default function ItemManage() {
     },
     
   ]
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-const handleSidebarToggle = () => {
-  setIsSidebarOpen(!isSidebarOpen);
-  
-};
-
-
-  
 
 
   return (
@@ -170,46 +112,11 @@ const handleSidebarToggle = () => {
         
       </Head>
       {/* Top navbar */}
-      <nav className="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            {/* Navbar Brand */}
-            <Link href="/Admin/UsersManage" className="navbar-brand ps-3">
-            <div>BORROW APP</div>
-            </Link>
-            {/* Sidebar Toggle */}
-            <button onClick={handleSidebarToggle} className="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" >
-              <FontAwesomeIcon icon={faBars} />
-            </button>
-            {/* Navbar Search */}
-            <form className="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-            </form>
-            {/* Navbar */}
-            <ul className="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-                <li className="nav-item dropdown">
-                    <a className="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Options
-                    </a>
-                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                      <li>
-                        <Link className="dropdown-item" href="/Items">
-                        <div >User view</div>
-                        </Link>
-                      </li>
-                      <li><hr className="dropdown-divider" /></li>
-                      <li>
-                        <Link className="dropdown-item" onClick={(e)=>{
-                             window.localStorage.clear();
-                        }} href="/">
-                        <div >Logout</div>
-                        </Link>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
+      <AdminNavbar />
 
       <div id="layoutSidenav">
         {/* Sidenav */}
-        <AdminSidebar isOpen={isSidebarOpen} />
+        <AdminSidebar />
         <div id="layoutSidenav_content">
                <main>
                     <div className="container-fluid px-4">
@@ -243,7 +150,6 @@ const handleSidebarToggle = () => {
                                     className="w-50 form-control"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    
                                     >
 
                                     </input>}

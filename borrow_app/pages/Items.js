@@ -3,35 +3,83 @@ import UserNavbar from '@/components/UserNavbar'
 import styles from "@/styles/Items.module.css";
 import { useState, useEffect } from "react";
 import axios from "axios"; // or import your MongoDB library here
-
-import Image from 'next/image';
+import { useRouter } from 'next/router';
+import DataTable from 'react-data-table-component';
+import Link from 'next/link';
 
 export default function Items() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [items, setItems] = useState([]);
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('/api/items');
-        setItems(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, []);
-  
+  const router = useRouter()
+  const [search, setSearch] = useState("");
+  const [filteredItems, setFilteredItems] = useState([]);
 
-  const handleSearch = async (event) => {
-    event.preventDefault();
+  const [items, setItems] = useState([]);
+
+  const fetchData = async () => {
     try {
-      const response = await axios.get(`/api/items?search=${searchTerm}`);
-      setItems(response.data);
+      axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_BACKEND}/api/update-expire/`)
+      .then(res =>{
+        axios.get(`${process.env.NEXT_PUBLIC_BASE_URL_BACKEND}/api/items/`)
+        .then(response => {
+          // console.log(response);
+          setItems(response.data);
+          setFilteredItems(response.data);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      }
+      ).catch(error => {
+        console.log(error);
+      });
     } catch (error) {
       console.log(error);
     }
-  };
+  }
+  
+  useEffect(() => {
+    let role = window.localStorage.getItem('role');
+    let token = window.localStorage.getItem('token');
+    if(!role || !token){
+        router.push('/')
+    }
+
+    fetchData();
+  }, []);
+  
+  useEffect(() => {
+    const result = items.filter(items=> {
+      return items.item_name.toLowerCase().match(search.toLowerCase());
+    })
+
+    setFilteredItems(result);
+  }, [search])
+
+  
+const columns = [
+  {
+    name: "ITEM TABLE",
+    cell: row => (
+      <section id="posts">
+          
+            <div className={styles.post}>
+              <div className={styles.imgBlogOne}>
+                <img alt="" src={row.item_img_url} width={200} height={200} />
+              </div>
+              <div className={styles.textBlogPost}>
+                <h3>{row.item_name}</h3>
+                <p className={styles.postAuthor}>Status: {row.item_status}</p>
+                <p className={styles.postDate}>Category: {row.item_category}</p>
+                <p className={styles.postExcerpt}>Description: {row.item_description}</p>
+                <Link href="/Contact">
+                    <button className={styles.readMoreBtn}>Contact</button>
+                  </Link>
+              </div>
+            </div>
+          
+        </section>
+    )
+  }
+];
 
   return (
     <>
@@ -41,41 +89,33 @@ export default function Items() {
         <p className={styles.blogDescription}>
           What item do you want to borrow? Let's find it!
         </p>
-        <form className={styles.searchBar} onSubmit={handleSearch}>
-          <input
-            type="text"
-            placeholder="Search for items..."
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-          />
-          <button className={styles.searchBtn} type="submit">
-            Search
-          </button>
-        </form>
+        
 
         {/* Section for post */}
-        <section id="posts">
-          {items.map((item) => (
-            <div className={styles.post} key={item._id}>
-              <div className={styles.imgBlogOne}>
-                <Image alt="" src={item.imageUrl} width={200} height={200} />
-              </div>
-              <div className={styles.textBlogPost}>
-                <h3>{item.name}</h3>
-                <p className={styles.postAuthor}>Status: {item.status}</p>
-                <p className={styles.postDate}>Category: {item.category}</p>
-                <p className={styles.postExcerpt}>Description: {item.description}</p>
-                <a href="">
-                  <button className={styles.readMoreBtn}>More Detail</button>
-                </a>
-              </div>
-            </div>
-          ))}
-        </section>
+        <DataTable
+        columns={columns}
+        data={filteredItems}
+        pagination
+        fixedHeader
+        noTableHead
+        fixedHeaderScrollHeight="1500px"
+        subHeader
+        subHeaderComponent={
+          <input 
+            type="text" 
+            placeholder="Search by Items name" 
+            className="w-50 form-control searchcenter"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            ></input>
+        }
+        subHeaderAlign="center"
+        
+        />
         
 
         {/* For example in section ^^ : examplay /#posts*/}
-        <div className={styles.post}>
+        {/* <div className={styles.post}>
             <div className={styles.imgBlogTwo}>
                 <Image alt="" src="/items/Oscil.png" width={200} height={200}/>
             </div>
@@ -88,7 +128,7 @@ export default function Items() {
                 <button className={styles.readMoreBtn}>More Detail</button>
               </a>
             </div>
-          </div>
+          </div> */}
       </main>
       <UserFooter />
     </>

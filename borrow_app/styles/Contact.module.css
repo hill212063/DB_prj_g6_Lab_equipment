@@ -1,19 +1,37 @@
-.label {
-    outline:3px solid red ;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-
-  }
-
-.mes{
-    justify-content: center;
-    width: 50%;
-    margin-left: 20px;
-}
-.image {
-    height: auto;
-    display: inline;
-    margin-bottom: 1rem;
-    float: right;
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  margin: 130px auto;
 }
 
+
+.logo {
+  flex-basis: 20%;
+}
+
+.logo img {
+  max-width: 100%;
+}
+
+.address {
+  flex-basis: 70%;
+}
+
+.address address {
+  font-style: normal;
+  margin: 20px 0px 20px;
+}
+
+.address a {
+  margin-right: 10px;
+}
+
+.new-image-container {
+  flex-basis: 10%;
+}
+
+.new-image-container img {
+  max-width: 100%;
+}

@@ -1,53 +1,63 @@
 import UserFooter from '@/components/UserFooter'
 import Link from "next/link"
 import styles from "@/styles/Home.module.css"
-import react from 'react'
 import { useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/router';
+
 
 export default function Home() {
-  const [ICITID, setICITID] = useState('');
-  const [password, setPassword] = useState('');
-
+  const [u_email, setu_email] = useState('');
+  const [u_password, setu_password] = useState('');
+  const router = useRouter()
   const handleICITChange = (e) => {
-    setICITID(e.target.value);
+    setu_email(e.target.value);
   };
 
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
+  const handleu_passwordChange = (e) => {
+    setu_password(e.target.value);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.post('/api/login', { ICITID, password })
+    axios.post(`${process.env.NEXT_PUBLIC_BASE_URL_BACKEND}/api/login/`, 
+    { u_email:u_email, u_password:u_password })
     .then((response) => {
-      console.log(response.data);
+      window.localStorage.setItem('role', `${response.data.role}`);
+      window.localStorage.setItem('token', `${response.data.token}`);
+      window.localStorage.setItem('u_id', `${response.data.u_id}`);
+      if(response.data.role === 'Admin'){
+        router.push("/Admin")
+      }else if(response.data.role === 'User'){
+        router.push('/Items')
+      }
     })
     .catch((error) => {
       console.error(error);
     });
 };
 
+
   return (
     <>
     <div className={styles.container}>
       <h1>Login</h1>
       <form onSubmit={handleSubmit} className={styles.form}>
-        <label htmlFor="ICIT" className={styles.label}>Email:</label>
+        <label htmlFor="u_email" className={styles.label}>Email:</label>
         <input
           type="text"
-          id="ICITID"
-          value={ICITID}
+          id="u_email"
+          value={u_email}
           onChange={handleICITChange}
           className={styles.input}
           required
         />
-        <label htmlFor="password" className={styles.label}>Password:</label>
+        <label htmlFor="u_password" className={styles.label}>password:</label>
         <input
           type="password"
-          id="password"
-          value={password}
-          onChange={handlePasswordChange}
+          id="u_password"
+          value={u_password}
+          onChange={handleu_passwordChange}
           className={styles.input}
           required
         />

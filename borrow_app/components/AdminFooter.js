@@ -1,9 +1,9 @@
 export default function AdminFooter() {
     return (
-        <footer class="py-4 bg-light mt-auto">
-            <div class="container-fluid px-4">
-                <div class="d-flex align-items-center justify-content-between small">
-                    <div class="text-muted">Copyright &copy; KMUTNB Trademark</div>
+        <footer className="py-4 bg-light mt-auto">
+            <div className="container-fluid px-4">
+                <div className="d-flex align-items-center justify-content-between small">
+                    <div className="text-muted">Copyright &copy; KMUTNB Trademark</div>
                     {/* <div>
                         <a href="#">Privacy Policy</a>
                         &middot;
