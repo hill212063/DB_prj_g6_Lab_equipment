@@ -134,7 +134,7 @@ def items(request):
             item_data = {
                 'item_id': item.item_id,
                 'item_id_type': item.item_id_type.t_name,
-                'item_img_url': (item.item_img_url) or "" ,
+                'item_img_url': str(item.item_img_url), 
                 'item_name': item.item_name,
                 'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
@@ -162,7 +162,7 @@ def item_details(request, item_id):
             'item_status': item.item_status,
             'item_borrow_status': item.item_borrow_status,
             'item_note': item.item_note,
-            'item_img_url': (item.item_img_url) or "" ,
+            'item_img_url': str(item.item_img_url) ,
             'item_created_at': item.item_created_at,
             'item_updated_at': item.item_updated_at,
         }
@@ -170,31 +170,29 @@ def item_details(request, item_id):
     except Item.DoesNotExist:
         return JsonResponse({'error': 'Item does not exist'})
 
-@api_view(['POST'])
-def borrowed_item(request):
+@api_view(['GET'])
+def borrowed(request,user_id):
     try:
-        user_id = int(request.data.get('uid'))
-        available_status = Borrow_status.objects.get(b_status_name="Available")
-        borrowings = Borrow_info.objects.filter(b_user=user_id).filter(b_item__in=Item.objects.exclude(item_status=available_status.b_status_id))
-        borrowed_items = []
-        for borrowing in borrowings:
-            item = borrowing.b_item
-            item_data = {
+        borrowed_items = Borrow_info.objects.filter(b_user=user_id)
+        datas = []
+        for i in  borrowed_items :
+            item = Item.objects.get(item_id=i.b_item.item_id)
+            if(item.item_borrow_status != "Available"):
+                item_data = {
                 'item_id': item.item_id,
                 'item_id_type': item.item_id_type.t_name,
                 'item_name': item.item_name,
                 'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
-                'item_department': item.item_department.d_name, # Accessing department name from department model
-                'item_major': item.item_major.m_name, # Accessing major name from major model
-                'item_status': item.item_borrow_status.b_status_name, # Accessing borrow status name from Borrow_statuse model
-                'item_img_url': (item.item_img_url) or "" ,
-            }
-            borrowed_items.append(item_data)
-        return Response(borrowed_items,status = status.HTTP_200_OK)
+                'item_department': item.item_department.d_name,
+                'item_major': item.item_major.m_name, 
+                'item_status': item.item_borrow_status.b_status_name,
+                'item_img_url': str(item.item_img_url) ,
+                }
+                datas.append(item_data)
+        return Response(datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 @api_view(['GET'])
