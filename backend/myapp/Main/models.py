@@ -27,7 +27,7 @@ class Major(models.Model):
     m_name = models.CharField(max_length=100)
 
     class Meta:
-        db_table = "Majors"
+        db_table = "majors"
 
     def __str__(self):
         return self.d_name
