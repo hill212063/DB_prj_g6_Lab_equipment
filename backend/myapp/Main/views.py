@@ -73,19 +73,74 @@ def all_items(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def all_roles(request):
+    try:
+        allroles = User_privilege.objects.all()
+        serializer =  UserPrivilegeSerializer(allroles,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-# from rest_framework.permissions import IsAuthenticated
 
 @api_view(['GET'])
-#@permission_classes([IsAuthenticated, CanViewItems])
+def all_idtypes(request):
+    try:
+        allidtypes = Id_type.objects.all()
+        serializer = IdTypeSerializer(allidtypes,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def all_categories(request):
+    try:
+        allcates = Item_category.objects.all()
+        serializer = ItemCategorySerializer(allcates,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def all_item_statuses(request):
+    try:
+        all_item_statuses = Item_status.objects.all()
+        serializer = ItemStatusSerializer(all_item_statuses,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def all_borrow_statuses(request):
+    try:
+        all_borrow_statuses = Borrow_status.objects.all()
+        serializer = Borrow_statusSerializer(all_borrow_statuses,many = True)
+        return Response(serializer.data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
 def items(request):
     # get only item that borrowed
     try:
         available_status = Borrow_status.objects.get(b_status_name="Available") 
         allitems = Item.objects.filter(item_status =  available_status.b_status_id )
-        serializer = ItemSerializer(allitems,many = True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        item_datas = []
+        for item in allitems:
+            
+            item_data = {
+                'item_id': item.item_id,
+                'item_id_type': item.item_id_type.t_name,
+                'item_img_url': (item.item_img_url) or "" ,
+                'item_name': item.item_name,
+                'item_category': item.item_category.item_cate_name,
+                'item_description': item.item_description,
+                'item_borrow_status': item.item_borrow_status.b_status_name,
+                'item_status':item.item_status.item_status_name
+            }
+            item_datas.append(item_data)
+        return Response(item_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -105,7 +160,7 @@ def item_details(request, item_id):
             'item_status': item.item_status,
             'item_borrow_status': item.item_borrow_status,
             'item_note': item.item_note,
-            'item_img_url': item.item_img_url,
+            'item_img_url': (item.item_img_url) or "" ,
             'item_created_at': item.item_created_at,
             'item_updated_at': item.item_updated_at,
         }
@@ -139,7 +194,8 @@ def borrowed_item(request):
                 'item_description': item.item_description,
                 'item_department': item.item_department.d_name, # Accessing department name from department model
                 'item_major': item.item_major.m_name, # Accessing major name from major model
-                'item_status': item.item_borrow_status.b_status_name # Accessing borrow status name from Borrow_statuse model
+                'item_status': item.item_borrow_status.b_status_name, # Accessing borrow status name from Borrow_statuse model
+                'item_img_url': (item.item_img_url) or "" ,
             }
             borrowed_items.append(item_data)
         return Response(borrowed_items,status = status.HTTP_200_OK)
@@ -152,8 +208,18 @@ def borrowed_item(request):
 def user_management(request):
     try:
         users = User.objects.all()
-        serializer = UserSerializer(users,many=True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        user_datas = []
+        for user in users:
+            user_data = {
+                'u_id': user.u_id,
+                'u_name': user.u_name,
+                'u_tel': user.u_tel,
+                'u_department': user.u_department.d_name,
+                'u_major': user.u_major.m_name, 
+                'u_privilege': user.u_privilege.p_name 
+                }
+            user_datas.append(user_data)
+        return Response(user_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
@@ -279,11 +345,38 @@ def delete_user(request,user_id):
 def borrowing_info(request):
     try:
         b_infos = Borrow_info.objects.all()
-        serializer = BorrowInfoSerializer( b_infos,many=True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        borrow_datas = []
+        for borrow in b_infos:
+            borrow_data = {
+                'b_id': borrow.b_id,
+                'b_user': borrow.b_user.u_email,
+                'b_item': borrow.b_item.item_id,
+                'b_borrow_time': borrow.b_borrow_time,
+                'b_return_time': borrow.b_return_time,
+                'b_location': borrow.b_location, 
+                'b_note': borrow.b_note 
+                }
+            borrow_datas.append(borrow_data)
+        return Response(borrow_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+@api_view(['GET'])
+def borrowing_by_id(request,info_id):
+    try:
+        b_info_data = Borrow_info.objects.get(b_id=info_id)
+        borrow_data = {
+                'b_id': b_info_data.b_id,
+                'b_user': b_info_data.b_user.u_email,
+                'b_item': b_info_data.b_item.item_id,
+                'b_borrow_time': b_info_data.b_borrow_time,
+                'b_return_time': b_info_data.b_return_time,
+                'b_location': b_info_data.b_location, 
+                'b_note': b_info_data.b_note 
+                }
+        return Response(borrow_data,status = status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
 
 @api_view(['POST'])
 def add_borrowing_info(request):
@@ -297,7 +390,8 @@ def add_borrowing_info(request):
     '''
     try:
         try:
-            b_item=Item.objects.get(item_id= request.data.get('b_item'))
+            print(request.data.get('b_item'))
+            b_item=Item.objects.get(item_id=request.data.get('b_item'))
             borrowed_status = Borrow_status.objects.get(b_status_name="Borrowed")
             Item.objects.filter(item_id= request.data.get('b_item')).update(item_borrow_status=borrowed_status.b_status_id)
         except ObjectDoesNotExist:
@@ -373,8 +467,18 @@ def delete_borrowing_info(request,info_id):
 def item_info(request):
     try:
         item_infos = Item.objects.all()
-        serializer = ItemSerializer( item_infos,many=True)
-        return Response(serializer.data,status = status.HTTP_200_OK)
+        item_datas = []
+        for item in item_infos:
+            item_data = {
+                'item_id': item.item_id,
+                'item_id_type':item.item_id_type.t_name,
+                'item_name': item.item_name,
+                'item_department': item.item_department.d_name,
+                'item_major': item.item_major.m_name,
+                'item_borrow_status': item.item_borrow_status.b_status_name,
+                }
+            item_datas.append(item_data)
+        return Response(item_datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -419,12 +523,12 @@ def add_item_info(request):
         try:
             item_department=Department.objects.get(d_id= request.data.get('item_department'))
         except ObjectDoesNotExist:
-            return Response({'message': 'department not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'Department not found'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
             item_major=Major.objects.get(m_id=request.data.get('item_major'))
         except ObjectDoesNotExist:
-            return Response({'message': 'major not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'Major not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             item_status=Item_status.objects.get(item_status_id= request.data.get('item_status'))
         except ObjectDoesNotExist:
