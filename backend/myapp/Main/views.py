@@ -24,7 +24,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from .storages import MediaStorage
 import os
 import uuid
+from django.utils import timezone
 from datetime import datetime  
+
 # Create your views here.
 # def index(request):
 #     objs = Item.objects.all().values()
@@ -38,7 +40,7 @@ from datetime import datetime
 def update_expire(request):
     try:
         expire_status = Borrow_status.objects.get(b_status_name="Expired")
-        expired_items = Borrow_info.objects.filter(b_return_time__lte=datetime.now())
+        expired_items = Borrow_info.objects.filter(b_return_time__lte=datetime.now(tz=timezone.utc))
         if(expire_status.b_status_id):
             for i in expired_items:
                 Item.objects.filter(item_id = i.b_item.item_id).update( item_borrow_status = expire_status.b_status_id)
@@ -132,7 +134,7 @@ def items(request):
             item_data = {
                 'item_id': item.item_id,
                 'item_id_type': item.item_id_type.t_name,
-                'item_img_url': (item.item_img_url) or "" ,
+                'item_img_url': str(item.item_img_url), 
                 'item_name': item.item_name,
                 'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
@@ -160,7 +162,7 @@ def item_details(request, item_id):
             'item_status': item.item_status,
             'item_borrow_status': item.item_borrow_status,
             'item_note': item.item_note,
-            'item_img_url': (item.item_img_url) or "" ,
+            'item_img_url': str(item.item_img_url) ,
             'item_created_at': item.item_created_at,
             'item_updated_at': item.item_updated_at,
         }
@@ -169,39 +171,35 @@ def item_details(request, item_id):
         return JsonResponse({'error': 'Item does not exist'})
 
 @api_view(['GET'])
-#@permission_classes([IsAuthenticated, CanViewItemDetails])
-def contact(request):
-    # TODO: Implement logic to fetch and return contact info for equipment_id for student users
-    response_data = {'message': f'Contact Admin'}
-    return JsonResponse(response_data)
-
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated, IsStudent])
-def borrowed_item(request):
+def borrowed(request,user_id):
     try:
-    
-        user_id,role = decode_access_token(request.data.get('token'))
-        available_status = Borrow_status.objects.get(b_status_name="Available")
-        borrowings = Borrow_info.objects.filter(b_user=user_id).filter(b_item__in=Item.objects.exclude(item_status=available_status.b_status_id))
-        borrowed_items = []
-        for borrowing in borrowings:
-            item = borrowing.b_item
-            item_data = {
+        borrowed_items = Borrow_info.objects.filter(b_user=user_id)
+        datas = []
+        for i in  borrowed_items :
+            item = Item.objects.get(item_id=i.b_item.item_id)
+            if(item.item_borrow_status != "Available"):
+                item_data = {
                 'item_id': item.item_id,
                 'item_id_type': item.item_id_type.t_name,
                 'item_name': item.item_name,
                 'item_category': item.item_category.item_cate_name,
                 'item_description': item.item_description,
-                'item_department': item.item_department.d_name, # Accessing department name from department model
-                'item_major': item.item_major.m_name, # Accessing major name from major model
-                'item_status': item.item_borrow_status.b_status_name, # Accessing borrow status name from Borrow_statuse model
-                'item_img_url': (item.item_img_url) or "" ,
-            }
-            borrowed_items.append(item_data)
-        return Response(borrowed_items,status = status.HTTP_200_OK)
+                'item_department': item.item_department.d_name,
+                'item_major': item.item_major.m_name, 
+                'item_status': item.item_borrow_status.b_status_name,
+                'item_img_url': str(item.item_img_url) ,
+                }
+                datas.append(item_data)
+        return Response(datas,status = status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['GET'])
+def contact(request):
+    # TODO: Implement logic to fetch and return contact info for equipment_id for student users
+    response_data = {'message': f'Contact Admin'}
+    return JsonResponse(response_data)
 
 
 @api_view(['GET'])
@@ -390,7 +388,6 @@ def add_borrowing_info(request):
     '''
     try:
         try:
-            print(request.data.get('b_item'))
             b_item=Item.objects.get(item_id=request.data.get('b_item'))
             borrowed_status = Borrow_status.objects.get(b_status_name="Borrowed")
             Item.objects.filter(item_id= request.data.get('b_item')).update(item_borrow_status=borrowed_status.b_status_id)
@@ -721,7 +718,8 @@ class LoginAPIView(APIView):
             role = str(user.u_privilege);
             response.data = {
                 'role': role,
-                'token': access_token
+                'token': access_token,
+                'u_id':user.u_id
             }
             return response
         except Exception as e:

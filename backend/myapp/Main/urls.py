@@ -26,7 +26,7 @@ urlpatterns = [
     path('api/items/', items),
     path('api/items/<int:item_id>/', item_details),
     path('api/contact/', contact),
-    path('api/borrowed/', borrowed_item),
+    path('api/borrowed/<int:user_id>/', borrowed),
 
     #path('api/dashboard/', dashboard),
     path('api/dashboard/user-management/', user_management),
