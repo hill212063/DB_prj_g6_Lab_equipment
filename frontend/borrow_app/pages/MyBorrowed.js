@@ -61,7 +61,7 @@ export default function MyBorrowed() {
           
             <div className={styles.post}>
               <div className={styles.imgBlogOne}>
-                <img alt="" src={row.item_img_url} width={200} height={200} />
+                <img alt="" src={`${process.env.NEXT_PUBLIC_BASE_URL_IMG}${row.item_img_url}`} width={200} height={200} />
               </div>
               <div className={styles.textBlogPost}>
                 <h3>{row.item_name}</h3>
